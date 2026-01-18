@@ -397,6 +397,22 @@
         </div>
     </div>
 </div>
+    <div class="ai-slider">
+    <label>
+        <span>MANGLE</span>
+        <span id="ai-mangle-val">0</span>
+    </label>
+    <input type="range" min="0" max="20" value="0" id="ai-mangle" oninput="updateAIDisplay('mangle')">
+</div>
+
+<div class="ai-slider">
+    <label>
+        <span>GOLDEN FREDDY</span>
+        <span id="ai-goldenFreddy-val">0</span>
+    </label>
+    <input type="range" min="0" max="1" value="0" id="ai-goldenFreddy" oninput="updateAIDisplay('goldenFreddy')">
+    <small style="color:#666; font-size:10px;">0=OFF | 1=ON</small>
+</div>
 
 <!-- MENU COLLECTIBLES -->
 <div id="collectibles-menu" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 3500; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; overflow-y: auto;">
@@ -698,10 +714,16 @@ let aiLevels = {
     foxy: 0,
     freddy: 0,
     puppet: 0
+     mangle: 0,
+    goldenFreddy: 0
 };
 
 // ==================== STATO GIOCO ====================
 let state = {
+    mangle: 0,        // 0=Backstage, 1=Dining, 2=Office
+mangleTimer: 0,   // Countdown prima jumpscare
+goldenFreddyActive: false,
+goldenFreddyTimer: 0
     active: false,
     pwr: 100,
     tmp: 60,
@@ -1389,6 +1411,10 @@ window.openCustomNight = function() {
     document.getElementById('custom-foxy-slider').value = aiLevels.foxy;
     document.getElementById('custom-freddy-slider').value = aiLevels.freddy;
     document.getElementById('custom-puppet-slider').value = aiLevels.puppet;
+    document.getElementById('ai-mangle').value = aiLevels.mangle;
+document.getElementById('ai-goldenFreddy').value = aiLevels.goldenFreddy;
+document.getElementById('ai-mangle-val').innerText = aiLevels.mangle;
+document.getElementById('ai-goldenFreddy-val').innerText = aiLevels.goldenFreddy;
     
     document.getElementById('custom-bonnie-level').innerText = aiLevels.bonnie;
     document.getElementById('custom-foxy-level').innerText = aiLevels.foxy;
@@ -1938,7 +1964,61 @@ window.switchCam = function(n) {
     
     updateCamView();
 };
+// Mangle AI
+function updateMangle(params) {
+    if (!params.mangle || state.mangle >= 2) return;
+    
+    if (Math.random() < params.mangle.moveChance * debugState.timeSpeed / 10) {
+        state.mangle++;
+        playSound(1500, 'square', 0.3); // Static sound
+        
+        if (state.mangle === 2) {
+            // Entrato in ufficio
+            document.getElementById('look-up-btn').style.display = 'block';
+            state.mangleTimer = 5; // 5 secondi per guardare su
+        }
+    }
+}
 
+window.lookUp = function() {
+    if (state.mangle === 2) {
+        state.mangle = 0; // Reset
+        state.mangleTimer = 0;
+        document.getElementById('look-up-btn').style.display = 'none';
+        playSound(800, 'sine', 0.2);
+    }
+};
+    // Golden Freddy AI
+function updateGoldenFreddy(params) {
+    if (state.goldenFreddyActive) {
+        state.goldenFreddyTimer -= debugState.timeSpeed / 10;
+        if (state.goldenFreddyTimer <= 0) {
+            die("GOLDEN FREDDY");
+            return;
+        }
+    } else {
+        // Check spawn
+        const totalAI = aiLevels.bonnie + aiLevels.foxy + aiLevels.freddy + aiLevels.puppet;
+        if (totalAI > 50 && Math.random() < 0.0005 * debugState.timeSpeed) {
+            state.goldenFreddyActive = true;
+            state.goldenFreddyTimer = 3;
+            document.getElementById('golden-freddy-warning').style.display = 'block';
+            playSound(100, 'sawtooth', 0.5);
+        }
+    }
+}
+
+// Aprire monitor fa sparire Golden Freddy
+function toggleMonitor() {
+    // ... codice esistente ...
+    
+    if (state.mon && state.goldenFreddyActive) {
+        state.goldenFreddyActive = false;
+        state.goldenFreddyTimer = 0;
+        document.getElementById('golden-freddy-warning').style.display = 'none';
+        playSound(1200, 'sine', 0.2);
+    }
+}
 window.startWinding = function() {
     if (!state.winding) {
         state.stats.windCount++;
@@ -1983,6 +2063,9 @@ function updateUI() {
 
 function updateCamView() {
     const params = calculateAIParams();
+    mangle: aiLevels.mangle > 0 ? {
+    moveChance: aiLevels.mangle * 0.002
+} : null
     const camView = document.getElementById('cam-view');
 const gradients = {1:'linear-gradient(180deg,#1a0000 0%,#0d0000 100%)',2:'linear-gradient(180deg,#0f001a 0%,#080010 100%)',3:'linear-gradient(180deg,#1a1300 0%,#0d0a00 100%)',4:'linear-gradient(90deg,#00001a 0%,#000010 100%)',5:'linear-gradient(90deg,#001a00 0%,#000d00 100%)',6:'linear-gradient(180deg,#1a1a1a 0%,#0a0a0a 100%)',7:'linear-gradient(180deg,#1a0013 0%,#0d000a 100%)'};
 camView.style.background=gradients[state.cam]||'#001100';
