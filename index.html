@@ -94,7 +94,7 @@
 
     /* --- TABLET --- */
     #tablet { position: absolute; inset: 0; background: var(--panel-bg); display: none; flex-direction: column; z-index: 100; border: 5px solid var(--neon-green); animation: slide-down 0.3s ease-out; }
-    #cam-view { flex: 2; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid var(--neon-green); }
+    #cam-view {transition: background 0.3s ease; flex: 2; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid var(--neon-green); }
     #static { position: absolute; inset: 0; background: url('https://upload.wikimedia.org/wikipedia/commons/5/5a/Static_flicker_free.gif'); opacity: 0; pointer-events: none; z-index: 150; }
     .static-active { opacity: 0.3 !important; }
 
@@ -1983,7 +1983,10 @@ function updateUI() {
 
 function updateCamView() {
     const params = calculateAIParams();
-    
+    const camView = document.getElementById('cam-view');
+const gradients = {1:'linear-gradient(180deg,#1a0000 0%,#0d0000 100%)',2:'linear-gradient(180deg,#0f001a 0%,#080010 100%)',3:'linear-gradient(180deg,#1a1300 0%,#0d0a00 100%)',4:'linear-gradient(90deg,#00001a 0%,#000010 100%)',5:'linear-gradient(90deg,#001a00 0%,#000d00 100%)',6:'linear-gradient(180deg,#1a1a1a 0%,#0a0a0a 100%)',7:'linear-gradient(180deg,#1a0013 0%,#0d000a 100%)'};
+camView.style.background=gradients[state.cam]||'#001100';
+camView.style.boxShadow='inset 0 0 80px rgba(0,0,0,0.9)';
     document.getElementById('bonnie-timer-ui').style.display = 'none';
     document.getElementById('music-box-container').style.display = 'none';
     document.getElementById('cam-monster').innerText = '';
