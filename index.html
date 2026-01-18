@@ -1,0 +1,2653 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FNAF: SYSTEM FAILURE - RE-WIRED v6.1</title>
+<style>
+    :root {
+        --neon-green: #0f0;
+        --neon-red: #f00;
+        --neon-blue: #0ff;
+        --neon-yellow: #ff0;
+        --bg-dark: #050505;
+        --panel-bg: #001100;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        background-color: var(--bg-dark);
+        color: var(--neon-green);
+        font-family: 'Courier New', monospace;
+        margin: 0; height: 100vh; overflow: hidden;
+        display: flex; flex-direction: column;
+        text-shadow: 0 0 5px var(--neon-green);
+        user-select: none;
+    }
+
+    body::after {
+        content: " "; display: block; position: absolute; inset: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none;
+    }
+
+    /* --- ANIMAZIONI --- */
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes glitch { 0% { transform: translate(0); } 2% { transform: translate(-5px, 2px); } 4% { transform: translate(5px, -2px); } 6% { transform: translate(0); } }
+    @keyframes blink-red { 50% { border-color: transparent; border-width: 4px; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    @keyframes jumpscare-shake { 0%, 100% { transform: translate(0, 0) scale(1); } 10% { transform: translate(-10px, 5px) scale(1.02); } 20% { transform: translate(10px, -5px) scale(0.98); } 30% { transform: translate(-8px, -8px) scale(1.01); } 40% { transform: translate(8px, 8px) scale(0.99); } 50% { transform: translate(-5px, 3px) scale(1.02); } 60% { transform: translate(5px, -3px) scale(0.98); } 70% { transform: translate(-3px, -5px) scale(1.01); } 80% { transform: translate(3px, 5px) scale(0.99); } 90% { transform: translate(-2px, 2px) scale(1); } }
+    @keyframes flash-red { 0%, 100% { background-color: transparent; } 50% { background-color: rgba(255, 0, 0, 0.3); } }
+    @keyframes zoom-in { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    @keyframes slide-down { 0% { transform: translateY(-100%); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    @keyframes warning-pulse { 0%, 100% { box-shadow: 0 0 0 rgba(255, 0, 0, 0.7); } 50% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.7); } }
+    
+    .jumpscare-active { animation: jumpscare-shake 0.5s infinite !important; }
+    .flash-red { animation: flash-red 0.2s 3; }
+    .cam-flash { animation: flash-red 0.15s; }
+
+    /* --- MENU --- */
+    #start-menu { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow-y: auto; padding: 20px; }
+    .game-title { font-size: 2.5rem; color: var(--neon-red); animation: glitch 3s infinite; margin-bottom: 5px; text-align: center; }
+    .game-subtitle { font-size: 1rem; color: var(--neon-green); margin-bottom: 30px; text-align: center; }
+    
+    .menu-section { width: 100%; max-width: 600px; margin-bottom: 25px; border: 2px solid var(--neon-green); padding: 15px; background: rgba(0, 17, 0, 0.3); }
+    .section-title { font-size: 1.2rem; color: var(--neon-yellow); margin-bottom: 15px; text-align: center; border-bottom: 1px solid var(--neon-green); padding-bottom: 5px; }
+    
+    .night-selector { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .night-btn { padding: 10px 20px; border: 2px solid var(--neon-green); background: #002200; color: var(--neon-green); font: inherit; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .night-btn:hover { background: var(--neon-green); color: #000; transform: scale(1.05); }
+    .night-btn:active { transform: scale(0.95); }
+    .night-btn.selected { background: var(--neon-green); color: #000; }
+    
+    .ai-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .ai-control { display: flex; flex-direction: column; gap: 5px; }
+    .ai-label { display: flex; justify-content: space-between; font-size: 14px; }
+    .ai-slider { width: 100%; height: 30px; background: #002200; border: 2px solid var(--neon-green); appearance: none; cursor: pointer; }
+    .ai-slider::-webkit-slider-thumb { appearance: none; width: 20px; height: 26px; background: var(--neon-green); cursor: pointer; }
+    .ai-slider::-moz-range-thumb { width: 20px; height: 26px; background: var(--neon-green); cursor: pointer; border: none; }
+    
+    .start-btn { padding: 15px 60px; border: 2px solid var(--neon-green); background: #002200; color: var(--neon-green); font: inherit; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1.2rem; margin-top: 10px; }
+    .start-btn:hover { background: var(--neon-green); color: #000; transform: scale(1.05); }
+    .start-btn:active { transform: scale(0.95); }
+    
+    #boot-sequence { display: none; width: 80%; max-width: 500px; text-align: left; font-size: 14px; border: 1px solid var(--neon-green); padding: 20px; margin-top: 20px; }
+
+    /* --- UI GIOCO --- */
+    #top-bar { display: flex; justify-content: space-between; padding: 10px; border-bottom: 2px solid var(--neon-green); background: var(--panel-bg); z-index: 10; flex-wrap: wrap; gap: 10px; }
+    .stat-item { display: flex; align-items: center; gap: 5px; }
+    .warning { color: var(--neon-red) !important; animation: blink 0.5s infinite; }
+    
+    #main-view { flex: 1; position: relative; display: flex; background: #000; }
+    .room { flex: 1; display: flex; padding: 10px; gap: 15px; }
+    .door-area { flex: 1; position: relative; background: #080808; border: 1px solid #222; overflow: hidden; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .office-desk { width: 100px; background: #000; border: 1px solid #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #040; text-align: center; }
+
+    .door-closed-l { border-left: 10px solid var(--neon-red) !important; background: repeating-linear-gradient(45deg, #222 0 10px, #111 10px 20px) !important; }
+    .door-closed-r { border-right: 10px solid var(--neon-red) !important; background: repeating-linear-gradient(45deg, #222 0 10px, #111 10px 20px) !important; }
+    .light-on { background: radial-gradient(circle, rgba(255, 255, 200, 0.2) 0%, #000 90%) !important; }
+    .animatronic { font-size: 80px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none; filter: drop-shadow(0 0 10px red); animation: shake 0.5s infinite; }
+    .animatronic.visible { display: block; }
+
+    /* --- TABLET --- */
+    #tablet { position: absolute; inset: 0; background: var(--panel-bg); display: none; flex-direction: column; z-index: 100; border: 5px solid var(--neon-green); animation: slide-down 0.3s ease-out; }
+    #cam-view { flex: 2; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; border-bottom: 2px solid var(--neon-green); }
+    #static { position: absolute; inset: 0; background: url('https://upload.wikimedia.org/wikipedia/commons/5/5a/Static_flicker_free.gif'); opacity: 0; pointer-events: none; z-index: 150; }
+    .static-active { opacity: 0.3 !important; }
+
+    #bonnie-timer-ui, #music-box-container { display: none; flex-direction: column; align-items: center; gap: 10px; z-index: 200; }
+    .status-text { font-weight: bold; font-size: 24px; text-align: center; letter-spacing: 2px; }
+    .sync-text { font-size: 14px; color: var(--neon-blue); animation: blink 0.5s infinite; }
+
+    #map { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 5px; }
+    .cam-btn { background: #002200; border: 2px solid var(--neon-green); color: var(--neon-green); font: inherit; cursor: pointer; transition: 0.1s; padding: 10px; }
+    .cam-btn:active { transform: scale(0.95); }
+    .active-cam { background: var(--neon-green); color: #000; }
+    .cam-danger { border-color: var(--neon-red) !important; animation: blink-red 0.4s infinite; }
+    .cam-warning { border-color: var(--neon-yellow) !important; }
+
+    #controls { height: 110px; display: flex; border-top: 2px solid var(--neon-green); background: #111; z-index: 20; }
+    .ctrl-group { flex: 1; display: flex; flex-direction: column; padding: 5px; gap: 5px; }
+    .btn { flex: 1; border: 2px solid var(--neon-green); background: #002200; color: var(--neon-green); font: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+    .btn:active { transform: scale(0.95); }
+    .btn-active { background: var(--neon-green); color: #000; }
+
+    #scare-screen { position: fixed; inset: 0; background: #000; z-index: 4000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    #victory-screen { position: fixed; inset: 0; background: #000; z-index: 4000; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    
+    .danger-indicator { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 150; border: 0px solid red; transition: border-width 0.3s; }
+    .danger-indicator.critical { border-width: 8px; animation: warning-pulse 1s infinite; }
+    
+    /* Achievement popup */
+    .achievement-popup { position: fixed; top: 80px; right: -400px; width: 350px; background: rgba(0, 50, 0, 0.95); border: 2px solid var(--neon-green); padding: 15px; z-index: 6000; transition: right 0.5s; box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+    .achievement-popup.show { right: 20px; }
+    .achievement-title { color: var(--neon-yellow); font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+    .achievement-desc { color: var(--neon-green); font-size: 12px; }
+    
+    /* Settings Menu */
+    #settings-menu, #achievements-menu, #custom-night-menu { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 3500; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; overflow-y: auto; }
+    #settings-menu.active, #achievements-menu.active, #custom-night-menu.active { display: flex; }
+    .settings-container, .achievements-container { width: 100%; max-width: 600px; background: var(--panel-bg); border: 3px solid var(--neon-green); padding: 30px; }
+    .settings-title { font-size: 2rem; color: var(--neon-green); text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--neon-green); padding-bottom: 10px; }
+    .settings-section { margin-bottom: 25px; }
+    .settings-section-title { font-size: 1.2rem; color: var(--neon-yellow); margin-bottom: 15px; }
+    .settings-option { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px; background: rgba(0, 50, 0, 0.3); border: 1px solid #0a4; }
+    .settings-label { font-size: 14px; }
+    .settings-slider { flex: 1; margin: 0 15px; }
+    .settings-value { min-width: 50px; text-align: right; color: var(--neon-yellow); }
+    .settings-toggle { padding: 5px 15px; border: 2px solid var(--neon-green); background: #002200; color: var(--neon-green); cursor: pointer; font: inherit; font-size: 12px; }
+    .settings-toggle.active { background: var(--neon-green); color: #000; }
+    .close-menu-btn { margin-top: 20px; padding: 10px 40px; }
+    
+    /* Achievements Display */
+    .achievement-item { display: flex; align-items: center; margin-bottom: 15px; padding: 15px; background: rgba(0, 50, 0, 0.3); border: 1px solid #0a4; }
+    .achievement-item.unlocked { border-color: var(--neon-green); background: rgba(0, 100, 0, 0.3); }
+    .achievement-icon { font-size: 30px; margin-right: 15px; }
+    .achievement-info { flex: 1; }
+    .achievement-name { font-size: 16px; color: var(--neon-green); font-weight: bold; margin-bottom: 3px; }
+    .achievement-description { font-size: 12px; color: #888; }
+    .achievement-item.unlocked .achievement-description { color: #afa; }
+    .locked-icon { opacity: 0.3; filter: grayscale(1); }
+    
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+    .stat-box { padding: 15px; background: rgba(0, 50, 0, 0.3); border: 1px solid #0a4; text-align: center; }
+    .stat-value { font-size: 24px; color: var(--neon-yellow); font-weight: bold; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
+    
+    /* Idle Animations */
+    @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-3px); } }
+    @keyframes sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(1deg); } }
+    .floating { animation: float 3s ease-in-out infinite; }
+    .swaying { animation: sway 4s ease-in-out infinite; }
+    
+    /* Tutorial Overlay */
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 5000; display: none; }
+    .tutorial-step { position: absolute; background: rgba(0, 100, 0, 0.95); border: 3px solid var(--neon-green); padding: 20px; border-radius: 10px; max-width: 300px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); }
+    .tutorial-arrow { position: absolute; width: 0; height: 0; border-style: solid; }
+    .tutorial-text { color: var(--neon-green); font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+
+    /* --- TUTORIAL --- */
+    #tutorial { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0, 17, 0, 0.95); border: 2px solid var(--neon-green); padding: 15px; z-index: 200; max-width: 90%; text-align: center; animation: pulse 2s infinite; }
+    .tutorial-close { margin-top: 10px; padding: 5px 15px; }
+
+    /* --- DEBUG MENU --- */
+    #debug-menu { position: fixed; top: 60px; right: 10px; width: 280px; max-height: 80vh; overflow-y: auto; background: rgba(0, 0, 0, 0.95); border: 2px solid var(--neon-yellow); padding: 15px; z-index: 5000; display: none; font-size: 12px; }
+    #debug-menu.active { display: block; }
+    .debug-title { color: var(--neon-yellow); font-size: 14px; font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid var(--neon-yellow); padding-bottom: 5px; }
+    .debug-section { margin-bottom: 12px; }
+    .debug-label { color: var(--neon-green); margin-bottom: 3px; display: flex; justify-content: space-between; }
+    .debug-btn { padding: 5px 10px; margin: 2px; border: 1px solid var(--neon-green); background: #002200; color: var(--neon-green); font: inherit; cursor: pointer; font-size: 11px; }
+    .debug-btn:hover { background: var(--neon-green); color: #000; }
+    .debug-btn:active { transform: scale(0.95); }
+    .debug-input { width: 60px; padding: 3px; background: #001100; border: 1px solid var(--neon-green); color: var(--neon-green); font: inherit; font-size: 11px; text-align: center; }
+    .debug-hint { color: #666; font-size: 10px; font-style: italic; margin-top: 5px; }
+    
+    #debug-toggle { position: fixed; top: 60px; left: 10px; width: 40px; height: 40px; background: rgba(255, 255, 0, 0.3); border: 2px solid var(--neon-yellow); color: var(--neon-yellow); font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5001; border-radius: 5px; }
+    #debug-toggle:active { background: rgba(255, 255, 0, 0.6); }
+
+    @media (max-width: 768px) {
+        .game-title { font-size: 1.8rem; }
+        .ai-controls { grid-template-columns: 1fr; }
+        #top-bar { font-size: 12px; }
+        .door-area { font-size: 60px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="start-menu">
+    <div id="menu-main-content">
+        <h1 class="game-title">FIVE NIGHTS AT FREDDY'S</h1>
+        <p class="game-subtitle">SYSTEM FAILURE - RE-WIRED v8.0</p>
+        
+        <!-- SELEZIONE NOTTE STORIA -->
+        <div class="menu-section">
+            <div class="section-title">MODALITÀ STORIA</div>
+            <div class="night-selector">
+                <button class="night-btn selected" onclick="selectNight(1)">NOTTE 1</button>
+                <button class="night-btn" onclick="selectNight(2)">NOTTE 2</button>
+                <button class="night-btn" onclick="selectNight(3)">NOTTE 3</button>
+                <button class="night-btn" onclick="selectNight(4)">NOTTE 4</button>
+                <button class="night-btn" onclick="selectNight(5)">NOTTE 5</button>
+                <button class="night-btn" onclick="selectNight(6)">NOTTE 6</button>
+                <button class="night-btn" id="night-7-btn" onclick="selectNight(7)" style="display:none; border-color: var(--neon-red) !important;">NOTTE 7</button>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="start-btn" onclick="startBoot()">AVVIA NOTTE</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+            <button class="night-btn" onclick="openCustomNight()" style="padding: 10px 20px; border-color: var(--neon-yellow) !important;">CUSTOM NIGHT</button>
+            <button class="night-btn" onclick="openSettings()" style="padding: 10px 20px;">IMPOSTAZIONI</button>
+            <button class="night-btn" onclick="openAchievements()" style="padding: 10px 20px;">ACHIEVEMENTS</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+            <button class="night-btn" onclick="openCollectibles()" style="padding: 8px 15px; font-size: 12px;">📜 COLLECTIBLES</button>
+            <button class="night-btn" onclick="openBestiary()" style="padding: 8px 15px; font-size: 12px;">📖 BESTIARY</button>
+        </div>
+        
+        <div style="text-align:center; font-size:11px; margin-top: 20px; color: #666;">
+            <div>Notte più alta: <span id="highscore-night">Nessuna</span></div>
+            <div style="margin-top: 5px;">Punteggio massimo: <span id="highscore">0</span></div>
+        </div>
+    </div>
+    
+    <div id="boot-sequence"><div id="boot-text"></div></div>
+</div>
+
+<!-- MENU IMPOSTAZIONI -->
+<div id="settings-menu">
+    <div class="settings-container">
+        <div class="settings-title">IMPOSTAZIONI</div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Audio</div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Volume Effetti</span>
+                <input type="range" class="settings-slider" min="0" max="100" value="30" id="settings-volume-sfx" oninput="updateSettingVolume('sfx', this.value)">
+                <span class="settings-value" id="settings-sfx-value">30%</span>
+            </div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Volume Ambiente</span>
+                <input type="range" class="settings-slider" min="0" max="100" value="15" id="settings-volume-ambient" oninput="updateSettingVolume('ambient', this.value)">
+                <span class="settings-value" id="settings-ambient-value">15%</span>
+            </div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Volume Music Box</span>
+                <input type="range" class="settings-slider" min="0" max="100" value="2" id="settings-volume-musicbox" oninput="updateSettingVolume('musicbox', this.value)">
+                <span class="settings-value" id="settings-musicbox-value">2%</span>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Opzioni</div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Menu Debug</span>
+                <button class="settings-toggle" id="toggle-debug" onclick="toggleDebugSetting()">OFF</button>
+            </div>
+        </div>
+        
+        <!-- Spazio per future opzioni -->
+        <!--
+        <div class="settings-section">
+            <div class="settings-section-title">Accessibilità</div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Modalità Alto Contrasto</span>
+                <button class="settings-toggle" onclick="toggleHighContrast()">OFF</button>
+            </div>
+            
+            <div class="settings-option">
+                <span class="settings-label">Riduzione Effetti Visivi</span>
+                <button class="settings-toggle" onclick="toggleReducedMotion()">OFF</button>
+            </div>
+        </div>
+        -->
+        
+        <button class="btn close-menu-btn" onclick="closeSettings()">CHIUDI</button>
+    </div>
+</div>
+
+<!-- MENU ACHIEVEMENTS -->
+<div id="achievements-menu">
+    <div class="achievements-container">
+        <div class="settings-title">ACHIEVEMENTS & STATISTICHE</div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Statistiche Globali</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="global-night">0</div>
+                    <div class="stat-label">NOTTE PIÙ ALTA</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="global-score">0</div>
+                    <div class="stat-label">PUNTEGGIO MASSIMO</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="global-achievements">0/7</div>
+                    <div class="stat-label">ACHIEVEMENTS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="global-completion">0%</div>
+                    <div class="stat-label">COMPLETAMENTO</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Achievements</div>
+            <div id="achievements-list"></div>
+        </div>
+        
+        <button class="btn close-menu-btn" onclick="closeAchievements()">CHIUDI</button>
+    </div>
+</div>
+
+
+<!-- MENU CUSTOM NIGHT -->
+<div id="custom-night-menu">
+    <div class="settings-container">
+        <div class="settings-title">CUSTOM NIGHT</div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">LIVELLI IA ANIMATRONICS</div>
+            
+            <div class="ai-controls">
+                <div class="ai-control">
+                    <div class="ai-label">
+                        <span>🐰 BONNIE</span>
+                        <span id="custom-bonnie-level">0</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="0" class="ai-slider" id="custom-bonnie-slider" oninput="updateCustomAILevel('bonnie', this.value)">
+                </div>
+                
+                <div class="ai-control">
+                    <div class="ai-label">
+                        <span>🦊 FOXY</span>
+                        <span id="custom-foxy-level">0</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="0" class="ai-slider" id="custom-foxy-slider" oninput="updateCustomAILevel('foxy', this.value)">
+                </div>
+                
+                <div class="ai-control">
+                    <div class="ai-label">
+                        <span>🐻 FREDDY</span>
+                        <span id="custom-freddy-level">0</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="0" class="ai-slider" id="custom-freddy-slider" oninput="updateCustomAILevel('freddy', this.value)">
+                </div>
+                
+                <div class="ai-control">
+                    <div class="ai-label">
+                        <span>🎁 PUPPET</span>
+                        <span id="custom-puppet-level">0</span>
+                    </div>
+                    <input type="range" min="0" max="20" value="0" class="ai-slider" id="custom-puppet-slider" oninput="updateCustomAILevel('puppet', this.value)">
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">PRESET RAPIDI</div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button class="settings-toggle" onclick="setCustomPreset(0,0,0,0)">TUTTI 0</button>
+                <button class="settings-toggle" onclick="setCustomPreset(10,10,10,10)">TUTTI 10</button>
+                <button class="settings-toggle" onclick="setCustomPreset(15,15,15,15)">TUTTI 15</button>
+                <button class="settings-toggle" onclick="setCustomPreset(20,20,20,20)" style="border-color: var(--neon-red) !important;">TUTTI 20</button>
+            </div>
+            <div style="text-align: center; margin-top: 10px; font-size: 10px; color: #666;">
+                Suggerimento: Prova 4-20 per un segreto...
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="btn close-menu-btn" onclick="closeCustomNight()">ANNULLA</button>
+            <button class="btn close-menu-btn" onclick="startCustomNight()">AVVIA</button>
+        </div>
+    </div>
+</div>
+
+<!-- MENU COLLECTIBLES -->
+<div id="collectibles-menu" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 3500; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; overflow-y: auto;">
+    <div class="settings-container">
+        <div class="settings-title">COLLECTIBLES & LORE</div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Oggetti Trovati: <span id="collectibles-count">0/5</span></div>
+            <div id="collectibles-list"></div>
+        </div>
+        
+        <button class="btn close-menu-btn" onclick="closeCollectibles()">CHIUDI</button>
+    </div>
+</div>
+
+<!-- MENU BESTIARY -->
+<div id="bestiary-menu" style="position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 3500; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; overflow-y: auto;">
+    <div class="settings-container">
+        <div class="settings-title">BESTIARY - INTEL ANIMATRONICS</div>
+        
+        <div class="settings-section">
+            <div class="settings-section-title">Database Creature</div>
+            <div id="bestiary-list"></div>
+        </div>
+        
+        <button class="btn close-menu-btn" onclick="closeBestiary()">CHIUDI</button>
+    </div>
+</div>
+
+<div id="top-bar">
+    <div class="stat-item">TIME: <span id="clock">12</span> AM</div>
+    <div class="stat-item">USAGE: <span id="usage">1</span> u/s</div>
+    <div class="stat-item">TEMP: <span id="temp">60</span>°C</div>
+    <div class="stat-item">PWR: <span id="power">100</span>%</div>
+    <div class="stat-item">NIGHT: <span id="night">1</span></div>
+</div>
+
+<div id="main-view">
+    <div class="room">
+        <div id="door-l" class="door-area">
+            <div id="m-l" class="animatronic">🦊</div>
+        </div>
+        <div class="office-desk">CORE<br>STATION</div>
+        <div id="door-r" class="door-area">
+            <div id="m-r" class="animatronic">🐻</div>
+        </div>
+        
+        <div id="tablet">
+            <div id="cam-view">
+                <div id="static"></div>
+                <div id="cam-label" style="position:absolute; top:10px; left:10px; z-index:160;">CAM <span id="cam-num">1</span></div>
+                <div id="cam-monster" style="font-size:80px; z-index:155;"></div>
+
+                <div id="bonnie-timer-ui">
+                    <div style="font-size:80px">🐰</div>
+                    <div id="b-timer-status" class="status-text"></div>
+                </div>
+
+                <div id="music-box-container">
+                    <div style="font-size:80px">🎁</div>
+                    <progress id="m-bar" value="80" max="80" style="width:200px; height: 25px;"></progress>
+                    <button class="btn" style="padding:10px 20px; margin-top:10px;" onmousedown="startWinding()" onmouseup="stopWinding()" ontouchstart="startWinding()" ontouchend="stopWinding()">RICARICA</button>
+                </div>
+            </div>
+            <div id="map">
+                <button id="btn-cam-1" class="cam-btn active-cam" onclick="switchCam(1)">CAM 1</button>
+                <button id="btn-cam-2" class="cam-btn" onclick="switchCam(2)">CAM 2</button>
+                <button id="btn-cam-3" class="cam-btn" onclick="switchCam(3)">CAM 3</button>
+                <button id="btn-cam-4" class="cam-btn" onclick="switchCam(4)">CAM 4</button>
+                <button id="btn-cam-5" class="cam-btn" onclick="switchCam(5)">CAM 5</button>
+                <button id="btn-cam-6" class="cam-btn" onclick="switchCam(6)">CAM 6</button>
+                <button id="btn-cam-7" class="cam-btn" onclick="switchCam(7)">CAM 7</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="controls">
+    <div class="ctrl-group">
+        <button class="btn" id="b-d-l" onclick="toggleDoor('l')">PORTA L</button>
+        <button class="btn" id="b-l-l" onclick="toggleLight('l')">LUCE L</button>
+    </div>
+    <button class="btn" style="flex:1.5" onclick="toggleMonitor()">MONITOR</button>
+    <div class="ctrl-group">
+        <button class="btn" id="b-d-r" onclick="toggleDoor('r')">PORTA R</button>
+        <button class="btn" id="b-l-r" onclick="toggleLight('r')">LUCE R</button>
+    </div>
+</div>
+
+<!-- Particle Effects Container -->
+<canvas id="particles-canvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;"></canvas>
+
+<div id="tutorial">
+    <div style="font-size:14px; line-height:1.6;">
+        <strong>TUTORIAL RAPIDO</strong><br>
+        • Sopravvivi fino alle 6 AM<br>
+        • Gestisci l'energia (evita sprechi)<br>
+        • BONNIE (CAM 1): Osserva per 2s per calmarlo<br>
+        • MUSIC BOX (CAM 3): Ricarica costantemente<br>
+        • FOXY/FREDDY: Osserva per rallentarli, chiudi porte se attaccano
+    </div>
+    <button class="btn tutorial-close" onclick="closeTutorial()">HO CAPITO</button>
+</div>
+
+<div id="debug-toggle" onclick="toggleDebugMenu()">D</div>
+
+<div class="danger-indicator" id="danger-indicator"></div>
+
+<div class="achievement-popup" id="achievement-popup">
+    <div class="achievement-title" id="achievement-title">Achievement Unlocked!</div>
+    <div class="achievement-desc" id="achievement-desc">Description</div>
+</div>
+
+<div id="debug-menu">
+    <div class="debug-title">DEBUG MENU</div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Velocità Tempo</span>
+            <span id="time-speed-display">1x</span>
+        </div>
+        <div>
+            <button class="debug-btn" onclick="setTimeSpeed(1)">1x</button>
+            <button class="debug-btn" onclick="setTimeSpeed(5)">5x</button>
+            <button class="debug-btn" onclick="setTimeSpeed(10)">10x</button>
+            <button class="debug-btn" onclick="setTimeSpeed(60)">60x</button>
+        </div>
+        <div class="debug-hint">60x = 1 ora al secondo</div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Energia</span>
+            <span id="debug-power-display">100%</span>
+        </div>
+        <div>
+            <button class="debug-btn" onclick="modifyPower(-25)">-25%</button>
+            <button class="debug-btn" onclick="modifyPower(-10)">-10%</button>
+            <button class="debug-btn" onclick="modifyPower(10)">+10%</button>
+            <button class="debug-btn" onclick="modifyPower(25)">+25%</button>
+        </div>
+        <div style="margin-top: 5px;">
+            <input type="number" class="debug-input" id="power-input" min="0" max="100" value="100">
+            <button class="debug-btn" onclick="setPowerExact()">SET</button>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Controlli Rapidi</span>
+        </div>
+        <div>
+            <button class="debug-btn" onclick="skipToHour(6)">Salta alle 6 AM</button>
+        </div>
+        <div style="margin-top: 3px;">
+            <button class="debug-btn" onclick="toggleInfinitePower()">
+                <span id="infinite-power-status">Energia Infinita: OFF</span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Volume Audio</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div>
+                <div style="font-size: 10px; margin-bottom: 2px;">Effetti: <span id="vol-sfx-display">30%</span></div>
+                <input type="range" min="0" max="100" value="30" style="width: 100%;" onchange="setVolume('sfx', this.value)">
+            </div>
+            <div>
+                <div style="font-size: 10px; margin-bottom: 2px;">Ambiente: <span id="vol-ambient-display">15%</span></div>
+                <input type="range" min="0" max="100" value="15" style="width: 100%;" onchange="setVolume('ambient', this.value)">
+            </div>
+            <div>
+                <div style="font-size: 10px; margin-bottom: 2px;">Music Box: <span id="vol-music-display">2%</span></div>
+                <input type="range" min="0" max="100" value="2" style="width: 100%;" onchange="setVolume('musicbox', this.value)">
+            </div>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Reset Progressi</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <button class="debug-btn" onclick="resetProgress('achievements')">Reset Achievements</button>
+            <button class="debug-btn" onclick="resetProgress('nights')">Reset Notti</button>
+            <button class="debug-btn" onclick="resetProgress('score')">Reset Punteggio</button>
+            <button class="debug-btn" onclick="resetProgress('all')" style="border-color: var(--neon-red);">Reset Tutto</button>
+        </div>
+        <div class="debug-hint">Attenzione: questa azione è irreversibile!</div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Sblocca Contenuti</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <button class="debug-btn" onclick="unlockAllCollectibles()">Sblocca Collectibles</button>
+            <button class="debug-btn" onclick="unlockAllBestiary()">Completa Bestiary</button>
+            <button class="debug-btn" onclick="resetCollectibles()">Reset Collectibles</button>
+            <button class="debug-btn" onclick="resetBestiary()">Reset Bestiary</button>
+        </div>
+        <div class="debug-hint">Ottieni tutto istantaneamente</div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Info Sistema</span>
+        </div>
+        <div style="font-size: 10px; color: #888;">
+            <div>FPS: <span id="debug-fps">60</span></div>
+            <div>Versione: v6.1 Enhanced</div>
+            <div>Ora gioco: <span id="debug-game-time">0:00</span></div>
+        </div>
+    </div>
+    
+    <!-- SPAZIO PER FUTURE FUNZIONI -->
+    <!--
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Spawn Animatronics</span>
+        </div>
+        <div>
+            <button class="debug-btn" onclick="forceSpawn('foxy')">Foxy Stage 4</button>
+            <button class="debug-btn" onclick="forceSpawn('freddy')">Freddy Stage 4</button>
+        </div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-label">
+            <span>Test Jumpscare</span>
+        </div>
+        <div>
+            <button class="debug-btn" onclick="testJumpscare('bonnie')">Bonnie</button>
+            <button class="debug-btn" onclick="testJumpscare('foxy')">Foxy</button>
+        </div>
+    </div>
+    -->
+    
+    <div class="debug-hint" style="margin-top: 10px; text-align: center;">Premi D o tocca il pulsante</div>
+</div>
+
+<div id="scare-screen">
+    <div id="blackout-eyes" style="font-size:80px; color:red; display:none; margin-bottom:15px;">⊙ ⊙</div>
+    <h2 id="fail-reason" style="color:var(--neon-red); font-size: 1.5rem; text-align:center; margin-bottom:15px;">ERRORE</h2>
+    <div style="text-align:center; margin-bottom:20px; font-size:16px;">
+        Sei arrivato alle: <span id="death-time" style="color:var(--neon-yellow);">12 AM</span>
+    </div>
+    <div style="text-align: center;">
+        <button class="btn" style="padding:10px 30px; cursor:pointer;" onclick="location.reload()">MENU PRINCIPALE</button>
+    </div>
+</div>
+
+<div id="victory-screen">
+    <div style="font-size:60px; margin-bottom:15px; color:var(--neon-green);">★ VITTORIA ★</div>
+    <h2 style="color:var(--neon-green); font-size: 1.8rem; margin-bottom:10px;">6:00 AM - SOPRAVVISSUTO!</h2>
+    <div style="text-align:center; margin-bottom:20px; font-size:16px;">
+        Notte: <span id="win-night" style="color:var(--neon-yellow);">1</span><br>
+        Energia rimasta: <span id="win-power" style="color:var(--neon-green);">0</span>%<br>
+        <div style="margin-top:10px; font-size:20px; font-weight:bold;">
+            PUNTEGGIO: <span id="win-score" style="color:var(--neon-yellow);">0</span>
+        </div>
+        <div style="margin-top:15px; font-size:12px; color:#888; border-top: 1px solid #333; padding-top:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 5px; text-align:left;">
+                <div>Porte chiuse:</div><div id="stat-doors">0</div>
+                <div>Cam visualizzate:</div><div id="stat-cams">0</div>
+                <div>Tempo su monitor:</div><div id="stat-monitor-time">0s</div>
+                <div>Music Box ricariche:</div><div id="stat-winds">0</div>
+            </div>
+        </div>
+        <div id="achievement-list" style="margin-top:10px; font-size:11px; color:var(--neon-yellow);"></div>
+    </div>
+    <div style="text-align: center;">
+        <button class="btn" style="padding:10px 30px; cursor:pointer;" onclick="location.reload()">MENU PRINCIPALE</button>
+    </div>
+</div>
+
+<script>
+// ==================== PRESET NOTTI ====================
+const NIGHT_PRESETS = {
+    1: { bonnie: 0, foxy: 0, freddy: 0, puppet: 0 },
+    2: { bonnie: 3, foxy: 1, freddy: 1, puppet: 2 },
+    3: { bonnie: 5, foxy: 3, freddy: 2, puppet: 4 },
+    4: { bonnie: 8, foxy: 6, freddy: 4, puppet: 7 },
+    5: { bonnie: 12, foxy: 10, freddy: 8, puppet: 11 },
+    6: { bonnie: 15, foxy: 14, freddy: 12, puppet: 15 },
+    7: { bonnie: 18, foxy: 17, freddy: 16, puppet: 18 }, // Notte segreta sbloccabile
+    // Easter egg 4/20 mode nascosto
+    420: { bonnie: 20, foxy: 20, freddy: 20, puppet: 20 },
+    custom: null // Custom - mantiene valori attuali
+};
+
+// ==================== CONFIGURAZIONE IA ====================
+let selectedNight = 1;
+let aiLevels = {
+    bonnie: 0,
+    foxy: 0,
+    freddy: 0,
+    puppet: 0
+};
+
+// ==================== STATO GIOCO ====================
+let state = {
+    active: false,
+    pwr: 100,
+    tmp: 60,
+    hour: 12,
+    cam: 1,
+    dL: false,
+    dR: false,
+    lL: false,
+    lR: false,
+    mon: false,
+    mus: 80,
+    winding: false,
+    sec: 0,
+    blackout: false,
+    foxy: 0,
+    freddy: 0,
+    bonnieTimer: 20,
+    bonnieSync: 0,
+    // Statistiche
+    stats: {
+        doorsUsed: 0,
+        camViews: 0,
+        monitorTime: 0,
+        windCount: 0,
+        bothDoorsTime: 0 // Per achievement "paranoico"
+    }
+};
+
+// ==================== DEBUG STATE ====================
+let debugState = {
+    timeSpeed: 1,
+    infinitePower: false,
+    volumeSFX: 0.3,        // Volume effetti sonori (0-1)
+    volumeAmbient: 0.15,   // Volume ambientale (0-1)
+    volumeMusicBox: 0.02,  // Volume music box (0-1)
+    debugMenuEnabled: false // Debug menu abilitato dalle impostazioni
+};
+
+// ==================== ACHIEVEMENTS ====================
+let achievements = {
+    first_win: { name: "Prima Notte", desc: "Completa la prima notte", unlocked: false },
+    night_5: { name: "Veterano", desc: "Completa la notte 5", unlocked: false },
+    night_6: { name: "Incubo", desc: "Completa la notte 6", unlocked: false },
+    night_7: { name: "Leggenda Oscura", desc: "Completa la notte 7 segreta", unlocked: false },
+    high_power: { name: "Efficiente", desc: "Vinci con 70%+ energia", unlocked: false },
+    no_doors: { name: "Porta Aperta", desc: "Vinci senza mai chiudere le porte", unlocked: false },
+    all_20: { name: "Leggenda", desc: "Vinci con tutti gli animatronics a 20", unlocked: false },
+    speedrun: { name: "Velocista", desc: "Vinci in meno di 3 minuti (tempo reale)", unlocked: false },
+    golden_freddy: { name: "Golden Freddy", desc: "Sopravvivi al 4/20 Mode", unlocked: false, hidden: true },
+    // Achievement segreti (rimangono nascosti anche dopo sbloccati)
+    secret_observer: { name: "Osservatore", desc: "Controlla tutte le cam 100+ volte in una notte", unlocked: false, secret: true },
+    secret_minimalist: { name: "Minimalista", desc: "Vinci usando monitor meno di 10 secondi totali", unlocked: false, secret: true },
+    secret_paranoid: { name: "Paranoico", desc: "Chiudi entrambe le porte per 30 secondi consecutivi", unlocked: false, secret: true },
+    secret_gambler: { name: "Scommettitore", desc: "Finisci una notte con meno del 5% energia", unlocked: false, secret: true }
+};
+
+let gameStartTime = 0;
+let unlockedThisGame = [];
+
+// ==================== COLLECTIBLES & LORE SYSTEM (#2) ====================
+let collectibles = {
+    poster1: { name: "Poster Glitchato", desc: "Un poster deformato di Freddy", found: false, location: "CAM 1" },
+    poster2: { name: "Numero Misterioso", desc: "1987 scritto a mano", found: false, location: "CAM 3" },
+    poster3: { name: "Articolo Giornale", desc: "Incidente del '87", found: false, location: "CAM 6" },
+    drawing: { name: "Disegno Bambino", desc: "Un disegno inquietante", found: false, location: "CAM 7" },
+    hat: { name: "Cappello Dorato", desc: "Il cappello di Golden Freddy", found: false, location: "CAM 8", secret: true }
+};
+
+// ==================== BESTIARY SYSTEM (#6) ====================
+let bestiary = {
+    bonnie: { 
+        name: "Bonnie", 
+        viewCount: 0,
+        unlocked: false,
+        desc: "Chitarrista della band. Si muove attraverso la sala da pranzo e il corridoio sinistro.",
+        mechanics: "Richiede sincronizzazione costante su CAM 1. Se il timer scade, causa crash di sistema."
+    },
+    foxy: { 
+        name: "Foxy", 
+        viewCount: 0,
+        unlocked: false,
+        desc: "Il pirata fuori servizio. Parte dal Pirate Cove e corre verso l'ufficio.",
+        mechanics: "Più lo ignori, più diventa aggressivo. Chiudi la porta sinistra quando arriva."
+    },
+    freddy: { 
+        name: "Freddy", 
+        viewCount: 0,
+        unlocked: false,
+        desc: "Il leader della band. Si muove metodicamente dal palco al corridoio destro.",
+        mechanics: "Imprevedibile e letale. Osserva i suoi movimenti e chiudi la porta destra al momento giusto."
+    },
+    puppet: { 
+        name: "The Puppet", 
+        viewCount: 0,
+        unlocked: false,
+        desc: "La marionetta nel Prize Corner. Dorme nella sua scatola musicale.",
+        mechanics: "Ricarica costantemente la music box su CAM 8. Se si sveglia, è game over istantaneo."
+    }
+};
+
+// ==================== ATMOSPHERIC EVENTS (#4) ====================
+let atmosphericEvents = {
+    lastEvent: 0,
+    events: [
+        { type: 'flicker', chance: 0.02, duration: 200 },
+        { type: 'whisper', chance: 0.01, duration: 1000 },
+        { type: 'shadow', chance: 0.015, duration: 500 },
+        { type: 'static', chance: 0.025, duration: 300 }
+    ]
+};
+
+function triggerAtmosphericEvent() {
+    const now = Date.now();
+    if (now - atmosphericEvents.lastEvent < 15000) return; // Min 15s tra eventi
+    
+    atmosphericEvents.events.forEach(event => {
+        if (Math.random() < event.chance / 10) {
+            atmosphericEvents.lastEvent = now;
+            
+            switch(event.type) {
+                case 'flicker':
+                    document.body.style.opacity = '0.3';
+                    setTimeout(() => document.body.style.opacity = '1', event.duration);
+                    playSound(100, 'sawtooth', 0.1, 0.3);
+                    break;
+                    
+                case 'whisper':
+                    const whisperOsc = audioCtx.createOscillator();
+                    const whisperGain = audioCtx.createGain();
+                    whisperOsc.type = 'sine';
+                    whisperOsc.frequency.setValueAtTime(150 + Math.random() * 50, audioCtx.currentTime);
+                    whisperGain.gain.setValueAtTime(0.02 * debugState.volumeAmbient, audioCtx.currentTime);
+                    whisperOsc.connect(whisperGain);
+                    whisperGain.connect(audioCtx.destination);
+                    whisperOsc.start();
+                    whisperOsc.stop(audioCtx.currentTime + event.duration / 1000);
+                    break;
+                    
+                case 'shadow':
+                    const shadow = document.createElement('div');
+                    shadow.style.cssText = 'position:fixed;top:0;right:-200px;width:200px;height:100%;background:linear-gradient(to left, transparent, rgba(0,0,0,0.8));z-index:150;pointer-events:none;';
+                    document.body.appendChild(shadow);
+                    setTimeout(() => shadow.remove(), event.duration);
+                    break;
+                    
+                case 'static':
+                    const staticDiv = document.createElement('div');
+                    staticDiv.style.cssText = 'position:fixed;inset:0;background:rgba(255,255,255,0.05);z-index:150;pointer-events:none;';
+                    document.body.appendChild(staticDiv);
+                    setTimeout(() => staticDiv.remove(), event.duration);
+                    playSound(2000, 'square', 0.1, 0.1);
+                    break;
+            }
+        }
+    });
+}
+
+function saveBestiary() {
+    const data = {};
+    for (let key in bestiary) {
+        data[key] = bestiary[key].viewCount;
+    }
+    localStorage.setItem('fnaf_bestiary', JSON.stringify(data));
+}
+
+function saveCollectibles() {
+    const data = {};
+    for (let key in collectibles) {
+        data[key] = collectibles[key].found;
+    }
+    localStorage.setItem('fnaf_collectibles', JSON.stringify(data));
+}
+
+// ==================== LOADING TIPS ====================
+const loadingTips = [
+    "Gestisci l'energia con saggezza - ogni azione consuma",
+    "Bonnie richiede sincronizzazione costante su CAM 1",
+    "Foxy accelera se non lo controlli spesso",
+    "La Music Box si scarica più velocemente di quanto pensi",
+    "Chiudi le porte solo quando necessario",
+    "Il monitor consuma energia anche da solo",
+    "Freddy è imprevedibile - tieni sempre d'occhio CAM 4",
+    "Due luci accese = doppio consumo energia",
+    "Presta attenzione ai suoni - ti avvertono dei movimenti",
+    "La ventilazione non consuma energia... o forse sì?",
+    "Gli animatronics si muovono anche quando non guardi"
+];
+
+let audioCtx;
+
+// ==================== ACHIEVEMENTS & VISUAL EFFECTS ====================
+function showAchievement(key) {
+    const ach = achievements[key];
+    if (!ach || ach.unlocked) return;
+    
+    ach.unlocked = true;
+    unlockedThisGame.push(key);
+    
+    // Salva achievement
+    const saved = JSON.parse(localStorage.getItem('fnaf_achievements') || '{}');
+    saved[key] = true;
+    localStorage.setItem('fnaf_achievements', JSON.stringify(saved));
+    
+    // Mostra popup
+    document.getElementById('achievement-title').innerText = ach.name;
+    document.getElementById('achievement-desc').innerText = ach.desc;
+    const popup = document.getElementById('achievement-popup');
+    popup.classList.add('show');
+    
+    playSound(1500, 'sine', 0.5, 0.5);
+    
+    setTimeout(() => {
+        popup.classList.remove('show');
+    }, 4000);
+}
+
+function checkAchievements() {
+    // Prima vittoria
+    if (!achievements.first_win.unlocked) {
+        showAchievement('first_win');
+    }
+    
+    // Notte specifica
+    if (selectedNight === 5 && !achievements.night_5.unlocked) {
+        showAchievement('night_5');
+    }
+    if (selectedNight === 6 && !achievements.night_6.unlocked) {
+        showAchievement('night_6');
+    }
+    if (selectedNight === 7 && !achievements.night_7.unlocked) {
+        showAchievement('night_7');
+    }
+    
+    // Golden Freddy (4/20 mode)
+    if (selectedNight === 420 && !achievements.golden_freddy.unlocked) {
+        showAchievement('golden_freddy');
+    }
+    
+    // Alta energia
+    if (state.pwr >= 70 && !achievements.high_power.unlocked) {
+        showAchievement('high_power');
+    }
+    
+    // Senza porte
+    if (state.stats.doorsUsed === 0 && !achievements.no_doors.unlocked) {
+        showAchievement('no_doors');
+    }
+    
+    // Tutti a 20
+    if (aiLevels.bonnie === 20 && aiLevels.foxy === 20 && 
+        aiLevels.freddy === 20 && aiLevels.puppet === 20 && 
+        !achievements.all_20.unlocked) {
+        showAchievement('all_20');
+    }
+    
+    // Speedrun (solo se non usi debug speed)
+    const gameTime = (Date.now() - gameStartTime) / 1000;
+    if (gameTime < 180 && debugState.timeSpeed === 1 && !achievements.speedrun.unlocked) {
+        showAchievement('speedrun');
+    }
+    
+    // Achievement segreti
+    if (state.stats.camViews >= 100 && !achievements.secret_observer.unlocked) {
+        showAchievement('secret_observer');
+    }
+    
+    if (state.stats.monitorTime < 10 && !achievements.secret_minimalist.unlocked) {
+        showAchievement('secret_minimalist');
+    }
+    
+    if (state.pwr < 5 && state.pwr > 0 && !achievements.secret_gambler.unlocked) {
+        showAchievement('secret_gambler');
+    }
+}
+
+function updateDangerIndicator() {
+    const indicator = document.getElementById('danger-indicator');
+    
+    // Pericolo critico se energia bassa O music box bassa O bonnie critico
+    const params = calculateAIParams();
+    const lowPower = state.pwr < 15;
+    const lowMusic = params.puppet && state.mus < 20;
+    const criticalBonnie = params.bonnie && state.bonnieTimer < 5;
+    
+    if (lowPower || lowMusic || criticalBonnie) {
+        indicator.classList.add('critical');
+    } else {
+        indicator.classList.remove('critical');
+    }
+}
+
+function flashCameraRed(camNum) {
+    const camBtn = document.getElementById(`btn-cam-${camNum}`);
+    if (camBtn) {
+        camBtn.classList.add('cam-flash');
+        setTimeout(() => camBtn.classList.remove('cam-flash'), 150);
+    }
+}
+
+// ==================== PARTICLE SYSTEM (#9) ====================
+const particles = [];
+const canvas = document.getElementById('particles-canvas');
+let ctx;
+
+function initParticles() {
+    if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx = canvas.getContext('2d');
+        
+        // Crea particelle di polvere
+        for (let i = 0; i < 30; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 0.5,
+                speedX: Math.random() * 0.5 - 0.25,
+                speedY: Math.random() * 0.3 + 0.1,
+                opacity: Math.random() * 0.3 + 0.1
+            });
+        }
+        
+        animateParticles();
+    }
+}
+
+function animateParticles() {
+    if (!ctx || !state.active) {
+        if (state.active) requestAnimationFrame(animateParticles);
+        return;
+    }
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    particles.forEach(p => {
+        ctx.fillStyle = `rgba(100, 150, 100, ${p.opacity})`;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+        
+        p.x += p.speedX;
+        p.y += p.speedY;
+        
+        if (p.y > canvas.height) {
+            p.y = -10;
+            p.x = Math.random() * canvas.width;
+        }
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+    });
+    
+    requestAnimationFrame(animateParticles);
+}
+
+function createSparkEffect(x, y) {
+    if (!ctx) return;
+    const sparks = [];
+    for (let i = 0; i < 15; i++) {
+        sparks.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1
+        });
+    }
+    
+    function animateSparks() {
+        sparks.forEach((s, i) => {
+            if (s.life <= 0) return;
+            
+            ctx.fillStyle = `rgba(255, 200, 0, ${s.life})`;
+            ctx.fillRect(s.x, s.y, 3, 3);
+            
+            s.x += s.vx;
+            s.y += s.vy;
+            s.vy += 0.3;
+            s.life -= 0.02;
+        });
+        
+        if (sparks.some(s => s.life > 0)) {
+            requestAnimationFrame(animateSparks);
+        }
+    }
+    
+    animateSparks();
+}
+
+function initIdleAnimations() {
+    // Aggiungi animazione floating al clock
+    const clock = document.getElementById('clock');
+    if (clock) clock.classList.add('floating');
+    
+    // Aggiungi animazione swaying ai pulsanti cam
+    document.querySelectorAll('.cam-btn').forEach(btn => {
+        if (Math.random() > 0.5) {
+            btn.classList.add('swaying');
+        }
+    });
+}
+
+// ==================== TUTORIAL INTERATTIVO (#14) ====================
+let tutorialStep = 0;
+let tutorialActive = false;
+
+function showTutorial() {
+    const firstTime = !localStorage.getItem('fnaf_tutorial_complete');
+    if (!firstTime) return;
+    
+    tutorialActive = true;
+    const overlay = document.createElement('div');
+    overlay.id = 'tutorial-overlay';
+    overlay.className = 'tutorial-overlay';
+    overlay.style.display = 'block';
+    document.body.appendChild(overlay);
+    
+    showTutorialStep(0);
+}
+
+function showTutorialStep(step) {
+    const overlay = document.getElementById('tutorial-overlay');
+    if (!overlay) return;
+    
+    overlay.innerHTML = '';
+    
+    const steps = [
+        {
+            text: "Benvenuto! Questo è il tuo ufficio. Devi sopravvivere fino alle 6 AM.",
+            target: null,
+            position: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        },
+        {
+            text: "Questo è il monitor. Usalo per controllare le telecamere e tenere d'occhio gli animatronics.",
+            target: document.querySelector('button[onclick*="toggleMonitor"]'),
+            position: null
+        },
+        {
+            text: "Questi sono i controlli delle porte e luci. Usali per proteggerti, ma consumano energia!",
+            target: document.getElementById('controls'),
+            position: null
+        },
+        {
+            text: "La tua energia è limitata. Gestiscila con saggezza o rimarrai al buio...",
+            target: document.getElementById('pwr'),
+            position: null
+        },
+        {
+            text: "Sei pronto! Buona fortuna, ne avrai bisogno.",
+            target: null,
+            position: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        }
+    ];
+    
+    if (step >= steps.length) {
+        localStorage.setItem('fnaf_tutorial_complete', 'true');
+        overlay.remove();
+        tutorialActive = false;
+        return;
+    }
+    
+    const currentStep = steps[step];
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'tutorial-step';
+    
+    stepDiv.innerHTML = `
+        <div class="tutorial-text">${currentStep.text}</div>
+        <button class="btn" style="padding: 8px 20px; cursor: pointer;">${step === steps.length - 1 ? 'INIZIA!' : 'AVANTI'}</button>
+    `;
+    
+    if (currentStep.target) {
+        const rect = currentStep.target.getBoundingClientRect();
+        stepDiv.style.top = (rect.bottom + 20) + 'px';
+        stepDiv.style.left = (rect.left + rect.width / 2 - 150) + 'px';
+    } else if (currentStep.position) {
+        Object.assign(stepDiv.style, currentStep.position);
+    }
+    
+    stepDiv.querySelector('button').onclick = () => showTutorialStep(step + 1);
+    
+    overlay.appendChild(stepDiv);
+}
+
+// ==================== SETTINGS & ACHIEVEMENTS MENU ====================
+window.openSettings = function() {
+    document.getElementById('settings-menu').classList.add('active');
+    playSound(600, 'sine', 0.1);
+    
+    // Carica valori attuali
+    document.getElementById('settings-volume-sfx').value = debugState.volumeSFX * 100;
+    document.getElementById('settings-volume-ambient').value = debugState.volumeAmbient * 100;
+    document.getElementById('settings-volume-musicbox').value = debugState.volumeMusicBox * 100;
+    document.getElementById('settings-sfx-value').innerText = Math.floor(debugState.volumeSFX * 100) + '%';
+    document.getElementById('settings-ambient-value').innerText = Math.floor(debugState.volumeAmbient * 100) + '%';
+    document.getElementById('settings-musicbox-value').innerText = Math.floor(debugState.volumeMusicBox * 100) + '%';
+    
+    const debugBtn = document.getElementById('toggle-debug');
+    debugBtn.innerText = debugState.debugMenuEnabled ? 'ON' : 'OFF';
+    debugBtn.classList.toggle('active', debugState.debugMenuEnabled);
+};
+
+window.closeSettings = function() {
+    document.getElementById('settings-menu').classList.remove('active');
+    playSound(600, 'sine', 0.1);
+    
+    // Salva impostazioni
+    localStorage.setItem('fnaf_settings', JSON.stringify({
+        volumeSFX: debugState.volumeSFX,
+        volumeAmbient: debugState.volumeAmbient,
+        volumeMusicBox: debugState.volumeMusicBox,
+        debugMenuEnabled: debugState.debugMenuEnabled
+    }));
+};
+
+window.updateSettingVolume = function(type, value) {
+    const normalizedValue = parseInt(value) / 100;
+    
+    if (type === 'sfx') {
+        debugState.volumeSFX = normalizedValue;
+        document.getElementById('settings-sfx-value').innerText = value + '%';
+    } else if (type === 'ambient') {
+        debugState.volumeAmbient = normalizedValue;
+        document.getElementById('settings-ambient-value').innerText = value + '%';
+        
+        if (ventilationOscillator) {
+            stopVentilation();
+            startVentilation();
+        }
+    } else if (type === 'musicbox') {
+        debugState.volumeMusicBox = normalizedValue;
+        document.getElementById('settings-musicbox-value').innerText = value + '%';
+    }
+};
+
+window.toggleDebugSetting = function() {
+    debugState.debugMenuEnabled = !debugState.debugMenuEnabled;
+    const btn = document.getElementById('toggle-debug');
+    btn.innerText = debugState.debugMenuEnabled ? 'ON' : 'OFF';
+    btn.classList.toggle('active', debugState.debugMenuEnabled);
+    
+    // Mostra/nascondi pulsante debug
+    document.getElementById('debug-toggle').style.display = debugState.debugMenuEnabled ? 'flex' : 'none';
+    
+    playSound(700, 'sine', 0.1);
+};
+
+window.openAchievements = function() {
+    document.getElementById('achievements-menu').classList.add('active');
+    playSound(600, 'sine', 0.1);
+    
+    // Aggiorna statistiche globali
+    const savedNight = localStorage.getItem('fnaf_night') || '0';
+    const savedScore = localStorage.getItem('fnaf_highscore') || '0';
+    
+    document.getElementById('global-night').innerText = savedNight;
+    document.getElementById('global-score').innerText = savedScore;
+    
+    // Conta achievements sbloccati
+    let unlockedCount = 0;
+    let totalCount = 0;
+    for (let key in achievements) {
+        totalCount++;
+        if (achievements[key].unlocked) unlockedCount++;
+    }
+    document.getElementById('global-achievements').innerText = unlockedCount + '/' + totalCount;
+    document.getElementById('global-completion').innerText = Math.floor((unlockedCount / totalCount) * 100) + '%';
+    
+    // Genera lista achievements
+    let achHTML = '';
+    const achOrder = ['first_win', 'night_5', 'night_6', 'night_7', 'high_power', 'no_doors', 'speedrun', 'all_20', 'golden_freddy', 'secret_observer', 'secret_minimalist', 'secret_paranoid', 'secret_gambler'];
+    
+    achOrder.forEach(key => {
+        const ach = achievements[key];
+        const unlocked = ach.unlocked;
+        
+        // Nascondi achievements hidden se non sbloccati
+        if (ach.hidden && !unlocked) return;
+        
+        // Mostra sempre i secret achievements ma nascosti
+        const isSecret = ach.secret;
+        
+        achHTML += `
+            <div class="achievement-item ${unlocked ? 'unlocked' : ''}">
+                <div class="achievement-icon ${unlocked ? '' : 'locked-icon'}">${key === 'golden_freddy' && unlocked ? '👑' : (isSecret ? '❓' : '★')}</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${unlocked ? ach.name : (isSecret ? '???' : ach.name)}</div>
+                    <div class="achievement-description">${unlocked ? ach.desc : (isSecret ? 'Segreto' : ach.desc)}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    document.getElementById('achievements-list').innerHTML = achHTML;
+};
+
+window.closeAchievements = function() {
+    document.getElementById('achievements-menu').classList.remove('active');
+    playSound(600, 'sine', 0.1);
+};
+
+window.openCollectibles = function() {
+    document.getElementById('collectibles-menu').style.display = 'flex';
+    playSound(600, 'sine', 0.1);
+    
+    let foundCount = 0;
+    let html = '';
+    
+    for (let key in collectibles) {
+        const item = collectibles[key];
+        if (item.found) foundCount++;
+        
+        html += `
+            <div class="achievement-item ${item.found ? 'unlocked' : ''}">
+                <div class="achievement-icon ${item.found ? '' : 'locked-icon'}">${item.secret && !item.found ? '👑' : '📜'}</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${item.found ? item.name : '???'}</div>
+                    <div class="achievement-description">${item.found ? item.desc : 'Trovalo su ' + item.location}</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('collectibles-count').innerText = foundCount + '/' + Object.keys(collectibles).length;
+    document.getElementById('collectibles-list').innerHTML = html;
+};
+
+window.closeCollectibles = function() {
+    document.getElementById('collectibles-menu').style.display = 'none';
+    playSound(600, 'sine', 0.1);
+};
+
+window.openBestiary = function() {
+    document.getElementById('bestiary-menu').style.display = 'flex';
+    playSound(600, 'sine', 0.1);
+    
+    let html = '';
+    
+    for (let key in bestiary) {
+        const creature = bestiary[key];
+        const unlocked = creature.viewCount >= 10; // Sblocca dopo 10 visualizzazioni
+        
+        html += `
+            <div class="achievement-item ${unlocked ? 'unlocked' : ''}">
+                <div class="achievement-icon ${unlocked ? '' : 'locked-icon'}">👁️</div>
+                <div class="achievement-info">
+                    <div class="achievement-name">${unlocked ? creature.name : '???'}</div>
+                    <div class="achievement-description" style="font-size: 11px; line-height: 1.4;">
+                        ${unlocked ? creature.desc + '<br><br><strong>MECCANICHE:</strong> ' + creature.mechanics : 'Osservazioni: ' + creature.viewCount + '/10'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    document.getElementById('bestiary-list').innerHTML = html;
+};
+
+window.closeBestiary = function() {
+    document.getElementById('bestiary-menu').style.display = 'none';
+    playSound(600, 'sine', 0.1);
+};
+
+// ==================== MENU FUNCTIONS ====================
+window.selectNight = function(night) {
+    selectedNight = night;
+    
+    // Update button selection
+    document.querySelectorAll('.night-selector .night-btn').forEach((btn, index) => {
+        btn.classList.toggle('selected', index + 1 === night);
+    });
+    
+    // Apply preset if not custom
+    if (NIGHT_PRESETS[night]) {
+        const preset = NIGHT_PRESETS[night];
+        aiLevels.bonnie = preset.bonnie;
+        aiLevels.foxy = preset.foxy;
+        aiLevels.freddy = preset.freddy;
+        aiLevels.puppet = preset.puppet;
+    }
+};
+
+window.openCustomNight = function() {
+    document.getElementById('custom-night-menu').classList.add('active');
+    playSound(600, 'sine', 0.1);
+    
+    // Carica valori attuali negli slider
+    document.getElementById('custom-bonnie-slider').value = aiLevels.bonnie;
+    document.getElementById('custom-foxy-slider').value = aiLevels.foxy;
+    document.getElementById('custom-freddy-slider').value = aiLevels.freddy;
+    document.getElementById('custom-puppet-slider').value = aiLevels.puppet;
+    
+    document.getElementById('custom-bonnie-level').innerText = aiLevels.bonnie;
+    document.getElementById('custom-foxy-level').innerText = aiLevels.foxy;
+    document.getElementById('custom-freddy-level').innerText = aiLevels.freddy;
+    document.getElementById('custom-puppet-level').innerText = aiLevels.puppet;
+};
+
+window.closeCustomNight = function() {
+    document.getElementById('custom-night-menu').classList.remove('active');
+    playSound(600, 'sine', 0.1);
+};
+
+window.updateCustomAILevel = function(animatronic, level) {
+    aiLevels[animatronic] = parseInt(level);
+    document.getElementById(`custom-${animatronic}-level`).innerText = level;
+};
+
+window.setCustomPreset = function(b, f, fr, p) {
+    // Easter egg: se setti 4, 20, 20, 20 attiva il preset nascosto 420
+    if (b === 4 && f === 20 && fr === 20 && p === 20) {
+        selectedNight = 420;
+        aiLevels.bonnie = 20;
+        aiLevels.foxy = 20;
+        aiLevels.freddy = 20;
+        aiLevels.puppet = 20;
+        
+        // Effetto visivo easter egg
+        document.body.classList.add('flash-red');
+        playSound(666, 'sawtooth', 1.0, 0.5);
+        setTimeout(() => document.body.classList.remove('flash-red'), 500);
+        
+        alert('🔥 4/20 MODE ATTIVATO 🔥\nGolden Freddy ti sta osservando...');
+    } else {
+        selectedNight = 'custom';
+        aiLevels.bonnie = b;
+        aiLevels.foxy = f;
+        aiLevels.freddy = fr;
+        aiLevels.puppet = p;
+    }
+    
+    // Aggiorna slider
+    document.getElementById('custom-bonnie-slider').value = aiLevels.bonnie;
+    document.getElementById('custom-foxy-slider').value = aiLevels.foxy;
+    document.getElementById('custom-freddy-slider').value = aiLevels.freddy;
+    document.getElementById('custom-puppet-slider').value = aiLevels.puppet;
+    
+    document.getElementById('custom-bonnie-level').innerText = aiLevels.bonnie;
+    document.getElementById('custom-foxy-level').innerText = aiLevels.foxy;
+    document.getElementById('custom-freddy-level').innerText = aiLevels.freddy;
+    document.getElementById('custom-puppet-level').innerText = aiLevels.puppet;
+    
+    playSound(800, 'sine', 0.1);
+};
+
+window.startCustomNight = function() {
+    closeCustomNight();
+    startBoot();
+};
+
+window.updateAILevel = function(animatronic, level) {
+    // Funzione rimossa - ora solo in custom night
+};
+
+// ==================== CALCOLO PARAMETRI DA LIVELLO IA ====================
+function calculateAIParams() {
+    // Bonnie: livello 0 = disabilitato, 1-20 = timer più veloce
+    // MODIFICATO: timer minimo da 5 a 10 secondi per renderlo giocabile anche a livello 20
+    const bonnieParams = aiLevels.bonnie === 0 ? null : {
+        TIMER_START: Math.max(10, 30 - aiLevels.bonnie),
+        SYNC_REQUIRED: 2,
+        DECAY_RATE: 0.4 + (aiLevels.bonnie * 0.05)
+    };
+    
+    // Foxy: livello 0 = disabilitato, 1-20 = più aggressivo
+    // MODIFICATO: aumentata chance base da 0.02 a 0.025 per più pressione
+    const foxyChance = aiLevels.foxy === 0 ? 0 : 0.025 + (aiLevels.foxy * 0.009);
+    
+    // Freddy: livello 0 = disabilitato, 1-20 = più aggressivo
+    // MODIFICATO: aumentata chance base da 0.02 a 0.025 per più pressione
+    const freddyChance = aiLevels.freddy === 0 ? 0 : 0.025 + (aiLevels.freddy * 0.009);
+    
+    // Puppet: livello 0 = disabilitato, 1-20 = si scarica più velocemente
+    // MODIFICATO: quadruplicato il decay per renderlo minaccioso
+    const puppetParams = aiLevels.puppet === 0 ? null : {
+        DECAY_RATE: 1.0 + (aiLevels.puppet * 0.14),
+        CHARGE_RATE: 4.0,
+        MAX: 80,
+        WARNING_THRESHOLD: 30
+    };
+    
+    return {
+        bonnie: bonnieParams,
+        foxyChance,
+        freddyChance,
+        puppet: puppetParams
+    };
+}
+
+// ==================== AUDIO ====================
+let ventilationOscillator = null;
+let musicBoxOscillator = null;
+let breathingInterval = null;
+
+function initAudioContext() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playSound(freq, type = 'sine', duration = 0.1, volume = 1.0) {
+    initAudioContext();
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        const finalVolume = volume * debugState.volumeSFX;
+        gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {
+        console.warn('Audio error:', e);
+    }
+}
+
+// Suono ventilazione ambientale continua
+function startVentilation() {
+    initAudioContext();
+    try {
+        ventilationOscillator = audioCtx.createOscillator();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+        
+        ventilationOscillator.type = 'sawtooth';
+        ventilationOscillator.frequency.setValueAtTime(60, audioCtx.currentTime);
+        
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(120, audioCtx.currentTime);
+        filter.Q.setValueAtTime(0.5, audioCtx.currentTime);
+        
+        gain.gain.setValueAtTime(debugState.volumeAmbient, audioCtx.currentTime);
+        
+        ventilationOscillator.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        ventilationOscillator.start();
+    } catch(e) {
+        console.warn('Ventilation audio error:', e);
+    }
+}
+
+function stopVentilation() {
+    if (ventilationOscillator) {
+        try {
+            ventilationOscillator.stop();
+            ventilationOscillator = null;
+        } catch(e) {}
+    }
+}
+
+// Music box melody (rallenta quando si scarica)
+function updateMusicBox(musicLevel) {
+    if (!state.active || aiLevels.puppet === 0) return;
+    
+    initAudioContext();
+    
+    if (musicBoxOscillator) {
+        try {
+            musicBoxOscillator.stop();
+        } catch(e) {}
+    }
+    
+    if (musicLevel > 0 && musicLevel < 80) {
+        try {
+            musicBoxOscillator = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            musicBoxOscillator.type = 'sine';
+            const speed = 0.5 + (musicLevel / 80) * 1.5;
+            musicBoxOscillator.frequency.setValueAtTime(523 * speed, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(debugState.volumeMusicBox, audioCtx.currentTime);
+            
+            musicBoxOscillator.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            musicBoxOscillator.start();
+            musicBoxOscillator.stop(audioCtx.currentTime + 0.3);
+        } catch(e) {}
+    }
+}
+
+// Suono statico monitor
+function playStaticNoise() {
+    initAudioContext();
+    try {
+        const duration = 0.15;
+        const bufferSize = audioCtx.sampleRate * duration;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        
+        const source = audioCtx.createBufferSource();
+        const filter = audioCtx.createBiquadFilter();
+        const gain = audioCtx.createGain();
+        
+        source.buffer = buffer;
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+        
+        const finalVolume = 0.08 * debugState.volumeSFX;
+        gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        source.start();
+    } catch(e) {}
+}
+
+// Suono porta pesante
+function playDoorSound(opening) {
+    initAudioContext();
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(opening ? 120 : 80, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(opening ? 180 : 60, audioCtx.currentTime + 0.3);
+        
+        const finalVolume = 0.12 * debugState.volumeSFX;
+        gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    } catch(e) {}
+}
+
+// Passi metallici (animatronics si muovono)
+function playFootsteps() {
+    initAudioContext();
+    try {
+        const times = [0, 0.15, 0.3];
+        times.forEach(time => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(100 + Math.random() * 50, audioCtx.currentTime + time);
+            
+            const finalVolume = 0.05 * debugState.volumeSFX;
+            gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime + time);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + time + 0.1);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start(audioCtx.currentTime + time);
+            osc.stop(audioCtx.currentTime + time + 0.1);
+        });
+    } catch(e) {}
+}
+
+// Respiro affannoso quando energia bassa
+function startBreathing() {
+    if (breathingInterval) return;
+    
+    breathingInterval = setInterval(() => {
+        if (!state.active || state.pwr >= 20) {
+            stopBreathing();
+            return;
+        }
+        
+        initAudioContext();
+        try {
+            const duration = 0.8;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + duration);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(300, audioCtx.currentTime);
+            
+            const peakVolume = 0.03 * debugState.volumeAmbient;
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(peakVolume, audioCtx.currentTime + duration * 0.3);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }, 2500);
+}
+
+function stopBreathing() {
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+    }
+}
+
+// Jumpscare sound
+function playJumpscare() {
+    initAudioContext();
+    try {
+        const duration = 1.5;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc1.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + duration);
+        
+        osc2.type = 'square';
+        osc2.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc2.frequency.exponentialRampToValueAtTime(60, audioCtx.currentTime + duration);
+        
+        const finalVolume = 0.25 * debugState.volumeSFX;
+        gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc1.start();
+        osc2.start();
+        osc1.stop(audioCtx.currentTime + duration);
+        osc2.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+}
+
+// Suono blackout elettrico
+function playBlackoutSound() {
+    initAudioContext();
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.8);
+        
+        const finalVolume = 0.15 * debugState.volumeSFX;
+        gain.gain.setValueAtTime(finalVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.8);
+    } catch(e) {}
+}
+
+function playAlarm(frequency = 200) {
+    playSound(frequency, 'sawtooth', 0.3, 0.3);
+}
+
+// ==================== BOOT SEQUENCE ====================
+function startBoot() {
+    const params = calculateAIParams();
+    
+    document.getElementById('menu-main-content').style.display = 'none';
+    document.getElementById('boot-sequence').style.display = 'block';
+    
+    let nightDisplay = selectedNight;
+    if (selectedNight === 420) {
+        nightDisplay = "4/20 MODE 🔥";
+    } else if (selectedNight === 'custom') {
+        nightDisplay = "CUSTOM";
+    }
+    
+    const lines = [
+        `> BOOTING OS v7.0...`,
+        `> NIGHT ${nightDisplay} SELECTED`,
+        `> AI LEVELS: B:${aiLevels.bonnie} F:${aiLevels.foxy} FR:${aiLevels.freddy} P:${aiLevels.puppet}`,
+        `> CHECKING CAM_1... ${params.bonnie ? 'ACTIVE' : 'DISABLED'}`,
+        `> CHECKING CAM_2... ${params.foxyChance > 0 ? 'ACTIVE' : 'DISABLED'}`,
+        `> CHECKING CAM_3... ${params.puppet ? 'ACTIVE' : 'DISABLED'}`,
+        `> CHECKING CAM_4... ${params.freddyChance > 0 ? 'ACTIVE' : 'DISABLED'}`,
+        `> PROTOCOL ENHANCED: ACTIVE`,
+        selectedNight === 420 ? `> WARNING: GOLDEN FREDDY DETECTED` : `> INITIALIZING NIGHT ${nightDisplay}...`
+    ];
+    
+    let i = 0;
+    const interval = setInterval(() => {
+        document.getElementById('boot-text').innerHTML += lines[i] + "<br>";
+        playSound(200 + (i * 50), 'sine', 0.05);
+        i++;
+        if (i >= lines.length) {
+            clearInterval(interval);
+            setTimeout(startGame, 800);
+        }
+    }, 200);
+}
+
+function startGame() {
+    const params = calculateAIParams();
+    
+    state.active = true;
+    state.pwr = 100;
+    state.hour = 12;
+    state.sec = 0;
+    state.mus = params.puppet ? params.puppet.MAX : 80;
+    state.blackout = false;
+    state.foxy = 0;
+    state.freddy = 0;
+    state.bonnieTimer = params.bonnie ? params.bonnie.TIMER_START : 999;
+    state.bonnieSync = 0;
+    state.dL = false;
+    state.dR = false;
+    state.lL = false;
+    state.lR = false;
+    state.mon = false;
+    state.stats = {
+        doorsUsed: 0,
+        camViews: 0,
+        monitorTime: 0,
+        windCount: 0,
+        bothDoorsTime: 0
+    };
+    
+    gameStartTime = Date.now();
+    unlockedThisGame = [];
+    
+    document.getElementById('start-menu').style.display = 'none';
+    document.getElementById('night').innerText = selectedNight;
+    
+    // Avvia ventilazione ambientale
+    startVentilation();
+    
+    // Inizia particle effects
+    initParticles();
+    
+    // Inizia animazioni idle
+    initIdleAnimations();
+    
+    gameLoop(params);
+    if (params.puppet) {
+        musicBoxLoop(params);
+    }
+}
+
+// ==================== CONTROLLI ====================
+window.toggleDoor = function(side) {
+    if (!state.active || state.blackout) return;
+    
+    if (side === 'l') {
+        const wasOpen = !state.dL;
+        state.dL = !state.dL;
+        if (wasOpen) {
+            state.stats.doorsUsed++;
+            // Effetto scintille quando chiudi
+            const doorBtn = document.getElementById('b-d-l');
+            const rect = doorBtn.getBoundingClientRect();
+            createSparkEffect(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+        playDoorSound(!state.dL);
+        document.getElementById('b-d-l').classList.toggle('btn-active', state.dL);
+    } else {
+        const wasOpen = !state.dR;
+        state.dR = !state.dR;
+        if (wasOpen) {
+            state.stats.doorsUsed++;
+            // Effetto scintille quando chiudi
+            const doorBtn = document.getElementById('b-d-r');
+            const rect = doorBtn.getBoundingClientRect();
+            createSparkEffect(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        }
+        playDoorSound(!state.dR);
+        document.getElementById('b-d-r').classList.toggle('btn-active', state.dR);
+    }
+    updateUI();
+};
+
+window.toggleLight = function(side) {
+    if (!state.active || state.mon || state.blackout) return;
+    
+    // Warning se energia troppo bassa
+    if (state.pwr < 5) {
+        playSound(200, 'sawtooth', 0.2);
+        return;
+    }
+    
+    playSound(800, 'sine', 0.05);
+    
+    if (side === 'l') {
+        state.lL = !state.lL;
+        document.getElementById('b-l-l').classList.toggle('btn-active', state.lL);
+    } else {
+        state.lR = !state.lR;
+        document.getElementById('b-l-r').classList.toggle('btn-active', state.lR);
+    }
+    updateUI();
+};
+
+window.toggleMonitor = function() {
+    if (!state.active || state.blackout) return;
+    state.mon = !state.mon;
+    
+    if (state.mon) {
+        state.lL = false;
+        state.lR = false;
+        document.getElementById('b-l-l').classList.remove('btn-active');
+        document.getElementById('b-l-r').classList.remove('btn-active');
+    }
+    
+    document.getElementById('tablet').style.display = state.mon ? 'flex' : 'none';
+    playStaticNoise();
+    updateUI();
+};
+
+window.switchCam = function(n) {
+    if (!state.active || !state.mon) return;
+    
+    if (state.cam === n) return; // Non fare nulla se è già la cam attiva
+    
+    state.cam = n;
+    state.stats.camViews++;
+    playSound(600, 'sine', 0.05);
+    
+    document.getElementById('cam-num').innerText = n;
+    document.getElementById('static').classList.add('static-active');
+    setTimeout(() => document.getElementById('static').classList.remove('static-active'), 150);
+    
+    updateCamView();
+};
+
+window.startWinding = function() {
+    if (!state.winding) {
+        state.stats.windCount++;
+    }
+    state.winding = true;
+};
+
+window.stopWinding = function() {
+    state.winding = false;
+};
+
+window.closeTutorial = function() {
+    document.getElementById('tutorial').style.display = 'none';
+    playSound(600, 'sine', 0.05);
+};
+
+// ==================== UPDATE UI ====================
+function updateUI() {
+    if (state.blackout) return;
+
+    const doorL = document.getElementById('door-l');
+    const doorR = document.getElementById('door-r');
+    
+    doorL.className = `door-area ${state.dL ? 'door-closed-l' : ''} ${state.lL ? 'light-on' : ''}`;
+    doorR.className = `door-area ${state.dR ? 'door-closed-r' : ''} ${state.lR ? 'light-on' : ''}`;
+
+    document.getElementById('m-l').classList.toggle('visible', state.lL && state.foxy >= 4);
+    document.getElementById('m-r').classList.toggle('visible', state.lR && state.freddy >= 4);
+
+    const usage = 1 + (state.mon ? 1 : 0) + (state.dL ? 1 : 0) + (state.dR ? 1 : 0) + 
+                  (state.lL ? 1 : 0) + (state.lR ? 1 : 0);
+    
+    document.getElementById('usage').innerText = usage;
+    document.getElementById('power').innerText = Math.max(0, Math.floor(state.pwr));
+    document.getElementById('temp').innerText = state.tmp;
+    
+    const powerEl = document.getElementById('power');
+    powerEl.classList.toggle('warning', state.pwr < 20);
+
+    updateCamView();
+}
+
+function updateCamView() {
+    const params = calculateAIParams();
+    
+    document.getElementById('bonnie-timer-ui').style.display = 'none';
+    document.getElementById('music-box-container').style.display = 'none';
+    document.getElementById('cam-monster').innerText = '';
+
+    document.querySelectorAll('.cam-btn').forEach((btn, i) => {
+        btn.classList.toggle('active-cam', (i + 1) === state.cam);
+    });
+
+    if (!state.mon) return;
+
+    // CAM 1 - Show Stage (Bonnie se attivo)
+    if (state.cam === 1) {
+        if (params.bonnie) {
+            document.getElementById('bonnie-timer-ui').style.display = 'flex';
+            const statusEl = document.getElementById('b-timer-status');
+            
+            let status, color;
+            const timerMax = params.bonnie.TIMER_START;
+            if (state.bonnieTimer > timerMax * 0.6) {
+                status = "CALMO";
+                color = "var(--neon-green)";
+            } else if (state.bonnieTimer > timerMax * 0.25) {
+                status = "AGITATO";
+                color = "orange";
+            } else {
+                status = "CRITICO";
+                color = "red";
+            }
+            
+            let displayText = `STATO: ${status}`;
+            if (state.bonnieSync > 0 && state.bonnieTimer < timerMax) {
+                displayText += '<br><span class="sync-text">> SINCRONIZZAZIONE...</span>';
+            }
+            
+            statusEl.innerHTML = displayText;
+            statusEl.style.color = color;
+            
+            document.getElementById('btn-cam-1').classList.toggle('cam-danger', state.bonnieTimer <= timerMax * 0.25);
+            document.getElementById('btn-cam-1').classList.toggle('cam-warning', state.bonnieTimer > timerMax * 0.25 && state.bonnieTimer <= timerMax * 0.5);
+            
+            // Track bestiary
+            bestiary.bonnie.viewCount++;
+            saveBestiary();
+        }
+    }
+
+    // CAM 2 - Pirate Cove (Foxy stage 0-3)
+    if (state.cam === 2 && params.foxyChance > 0) {
+        if (state.foxy <= 3) {
+            // Mostra solo se Foxy è ancora nel Pirate Cove
+        }
+        
+        document.getElementById('btn-cam-2').classList.toggle('cam-warning', state.foxy >= 2);
+        document.getElementById('btn-cam-2').classList.toggle('cam-danger', state.foxy >= 3);
+        
+        bestiary.foxy.viewCount++;
+        saveBestiary();
+    }
+    
+    // CAM 3 - Dining Area (Bonnie potrebbe passare qui - vuota per ora)
+    if (state.cam === 3) {
+        // Camera di transito - può essere vuota
+    }
+
+    // CAM 4 - Left Hall (Foxy quando stage 4)
+    if (state.cam === 4 && params.foxyChance > 0) {
+        if (state.foxy === 4) {
+            // Foxy visibile nel corridoio
+        }
+        document.getElementById('btn-cam-4').classList.toggle('cam-danger', state.foxy === 4);
+    }
+    
+    // CAM 5 - Right Hall (Freddy quando stage 4)
+    if (state.cam === 5 && params.freddyChance > 0) {
+        if (state.freddy === 4) {
+            // Freddy visibile nel corridoio
+        }
+        document.getElementById('btn-cam-5').classList.toggle('cam-danger', state.freddy === 4);
+        
+        bestiary.freddy.viewCount++;
+        saveBestiary();
+    }
+    
+    // CAM 6 - Supply Closet (SEMPRE VUOTA - spreco tempo)
+    if (state.cam === 6) {
+        // Camera vuota - nessun contenuto da mostrare
+    }
+
+    // CAM 7 - Prize Corner (Music Box)
+    if (state.cam === 7) {
+        if (params.puppet) {
+            document.getElementById('music-box-container').style.display = 'flex';
+            document.getElementById('btn-cam-7').classList.toggle('cam-warning', state.mus < params.puppet.WARNING_THRESHOLD);
+            document.getElementById('btn-cam-7').classList.toggle('cam-danger', state.mus < 20);
+            
+            bestiary.puppet.viewCount++;
+            saveBestiary();
+        }
+    }
+}
+
+// ==================== GAME LOOP ====================
+function gameLoop(params) {
+    const baseInterval = 1000;
+    
+    const mainLoop = setInterval(() => {
+        if (!state.active || state.blackout) {
+            clearInterval(mainLoop);
+            return;
+        }
+
+        // Applica velocità tempo dal debug
+        const secondsToAdd = debugState.timeSpeed;
+        state.sec += secondsToAdd;
+
+        // Traccia tempo su monitor
+        if (state.mon) {
+            state.stats.monitorTime += secondsToAdd;
+        }
+        
+        // Traccia porte entrambe chiuse per achievement
+        if (state.dL && state.dR) {
+            state.stats.bothDoorsTime += secondsToAdd;
+            if (state.stats.bothDoorsTime >= 30 && !achievements.secret_paranoid.unlocked) {
+                showAchievement('secret_paranoid');
+            }
+        }
+        
+        // Update indicatore pericolo
+        updateDangerIndicator();
+        
+        // Trigger atmospheric events casuali
+        if (Math.random() < 0.01) {
+            triggerAtmosphericEvent();
+        }
+
+        if (state.sec >= 40) {
+            state.hour++;
+            state.sec = 0;
+            if (state.hour === 13) state.hour = 1;
+            document.getElementById('clock').innerText = state.hour;
+            playSound(1000, 'sine', 0.2);
+            
+            if (state.hour === 6) {
+                victory();
+                return;
+            }
+        }
+
+        const usage = 1 + (state.mon ? 1 : 0) + (state.dL ? 1 : 0) + (state.dR ? 1 : 0) + 
+                      (state.lL ? 1 : 0) + (state.lR ? 1 : 0);
+        const drain = (0.14 + ((usage - 1) * 0.14)) * debugState.timeSpeed;
+        
+        // Applica energia infinita dal debug
+        if (!debugState.infinitePower) {
+            state.pwr -= drain;
+        }
+
+        if (state.pwr <= 0 && !debugState.infinitePower) {
+            state.pwr = 0;
+            triggerBlackout();
+            return;
+        }
+
+        if (state.pwr < 15 && state.pwr > 14 && !debugState.infinitePower) {
+            playAlarm(150);
+        }
+        
+        // Respiro affannoso se energia bassa
+        if (state.pwr < 20 && !breathingInterval) {
+            startBreathing();
+        }
+
+        state.tmp = 60 + Math.floor((100 - state.pwr) * 0.3) + Math.floor(Math.random() * 3);
+
+        // Update Bonnie
+        if (params.bonnie) {
+            const bonnieWatched = state.mon && state.cam === 1;
+            if (bonnieWatched) {
+                state.bonnieSync += debugState.timeSpeed;
+                if (state.bonnieSync >= params.bonnie.SYNC_REQUIRED) {
+                    state.bonnieTimer = params.bonnie.TIMER_START;
+                    playSound(1200, 'sine', 0.1);
+                    state.bonnieSync = 0;
+                }
+            } else {
+                state.bonnieSync = 0;
+                state.bonnieTimer -= params.bonnie.DECAY_RATE * debugState.timeSpeed;
+            }
+
+            if (state.bonnieTimer <= 0) {
+                die("SISTEMA CRASHATO (BONNIE)");
+                return;
+            }
+        }
+
+        // Update Foxy (con velocità tempo)
+        for (let i = 0; i < debugState.timeSpeed; i++) {
+            if (params.foxyChance > 0 && Math.random() < params.foxyChance) {
+                state.foxy++;
+                playFootsteps();
+                
+                // Flash su cam diverse in base allo stage
+                if (state.foxy === 1 || state.foxy === 2 || state.foxy === 3) {
+                    flashCameraRed(2); // Pirate Cove
+                } else if (state.foxy === 4) {
+                    flashCameraRed(4); // Left Hall
+                }
+                
+                if (state.foxy > 4) {
+                    if (state.dL) {
+                        state.foxy = 0;
+                        playSound(800, 'square', 0.2);
+                        const doorL = document.getElementById('door-l');
+                        doorL.classList.add('flash-red');
+                        setTimeout(() => doorL.classList.remove('flash-red'), 300);
+                    } else {
+                        die("FOXY HA SFONDATO LA PORTA");
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Update Freddy (con velocità tempo)
+        for (let i = 0; i < debugState.timeSpeed; i++) {
+            if (params.freddyChance > 0 && Math.random() < params.freddyChance) {
+                state.freddy++;
+                playFootsteps();
+                
+                // Flash su cam diverse in base allo stage
+                if (state.freddy <= 3) {
+                    flashCameraRed(1); // Show Stage
+                } else if (state.freddy === 4) {
+                    flashCameraRed(5); // Right Hall
+                }
+                
+                if (state.freddy > 4) {
+                    if (state.dR) {
+                        state.freddy = 0;
+                        playSound(800, 'square', 0.2);
+                        const doorR = document.getElementById('door-r');
+                        doorR.classList.add('flash-red');
+                        setTimeout(() => doorR.classList.remove('flash-red'), 300);
+                    } else {
+                        die("FREDDY È ENTRATO NELL'UFFICIO");
+                        return;
+                    }
+                }
+            }
+        }
+
+        updateUI();
+    }, baseInterval);
+}
+
+function musicBoxLoop(params) {
+    const musicLoop = setInterval(() => {
+        if (!state.active || state.blackout) {
+            clearInterval(musicLoop);
+            return;
+        }
+
+        if (state.winding && state.cam === 3 && state.mon) {
+            state.mus = Math.min(params.puppet.MAX, state.mus + params.puppet.CHARGE_RATE);
+        } else {
+            state.mus -= params.puppet.DECAY_RATE * (debugState.timeSpeed / 10);
+        }
+
+        document.getElementById('m-bar').value = state.mus;
+        
+        // Update melodia music box ogni secondo
+        if (Math.random() < 0.3) {
+            updateMusicBox(state.mus);
+        }
+
+        if (state.mus < params.puppet.WARNING_THRESHOLD && state.mus > params.puppet.WARNING_THRESHOLD - 1) {
+            playAlarm(180);
+        }
+
+        if (state.mus <= 0) {
+            die("LA MARIONETTA È USCITA");
+            clearInterval(musicLoop);
+            return;
+        }
+    }, 100);
+}
+
+// ==================== FINE GIOCO ====================
+function triggerBlackout() {
+    state.blackout = true;
+    state.active = false;
+    document.getElementById('tablet').style.display = 'none';
+    
+    stopVentilation();
+    stopBreathing();
+    playBlackoutSound();
+    
+    setTimeout(() => {
+        document.getElementById('scare-screen').style.display = 'flex';
+        document.getElementById('blackout-eyes').style.display = 'block';
+        document.getElementById('fail-reason').innerText = 'BLACKOUT ENERGETICO';
+        document.getElementById('death-time').innerText = (state.hour === 12 ? '12' : state.hour) + ' AM';
+        playJumpscare();
+    }, 2000);
+}
+
+function die(reason) {
+    state.active = false;
+    stopVentilation();
+    stopBreathing();
+    
+    // Effetto shake su tutto il body
+    document.body.classList.add('jumpscare-active');
+    
+    playJumpscare();
+    
+    setTimeout(() => {
+        document.body.classList.remove('jumpscare-active');
+        document.getElementById('fail-reason').innerText = reason;
+        document.getElementById('death-time').innerText = (state.hour === 12 ? '12' : state.hour) + ' AM';
+        document.getElementById('scare-screen').style.display = 'flex';
+    }, 500);
+}
+
+function victory() {
+    state.active = false;
+    stopVentilation();
+    stopBreathing();
+    playSound(1500, 'sine', 0.5);
+    
+    // Calcola punteggio
+    const score = calculateScore();
+    
+    // Check achievements
+    checkAchievements();
+    
+    // Salva record se migliore
+    const currentHighscore = parseInt(localStorage.getItem('fnaf_highscore') || '0');
+    if (score > currentHighscore) {
+        localStorage.setItem('fnaf_highscore', score);
+    }
+    
+    // Salva notte completata (solo notti 1-7 non custom/420)
+    const currentRecord = parseInt(localStorage.getItem('fnaf_night') || '0');
+    if (typeof selectedNight === 'number' && selectedNight >= 1 && selectedNight <= 7 && selectedNight > currentRecord) {
+        localStorage.setItem('fnaf_night', selectedNight);
+        
+        // Sblocca notte 7 se hai completato la 6
+        if (selectedNight === 6) {
+            document.getElementById('night-7-btn').style.display = 'inline-block';
+        }
+    }
+    
+    // Mostra statistiche
+    let nightDisplay = selectedNight;
+    if (selectedNight === 420) nightDisplay = "4/20 🔥";
+    else if (selectedNight === 'custom') nightDisplay = "CUSTOM";
+    
+    document.getElementById('win-night').innerText = nightDisplay;
+    document.getElementById('win-power').innerText = Math.floor(state.pwr);
+    document.getElementById('win-score').innerText = score;
+    document.getElementById('stat-doors').innerText = state.stats.doorsUsed;
+    document.getElementById('stat-cams').innerText = state.stats.camViews;
+    document.getElementById('stat-monitor-time').innerText = Math.floor(state.stats.monitorTime) + 's';
+    document.getElementById('stat-winds').innerText = state.stats.windCount;
+    
+    // Mostra achievements sbloccati questa partita
+    if (unlockedThisGame.length > 0) {
+        const achList = unlockedThisGame.map(key => '★ ' + achievements[key].name).join('<br>');
+        document.getElementById('achievement-list').innerHTML = '<br><strong>Achievements:</strong><br>' + achList;
+    } else {
+        document.getElementById('achievement-list').innerHTML = '';
+    }
+    
+    document.getElementById('victory-screen').style.display = 'flex';
+}
+
+function calculateScore() {
+    // Punteggio base per animatronic level
+    const basePointsPerLevel = 50;
+    
+    // Somma livelli attivi
+    const totalAILevel = aiLevels.bonnie + aiLevels.foxy + aiLevels.freddy + aiLevels.puppet;
+    
+    // Se nessun animatronic è attivo, punteggio = 0 (nessuna sfida)
+    if (totalAILevel === 0) {
+        return 0;
+    }
+    
+    // Conta quanti animatronics sono attivi
+    const activeCount = (aiLevels.bonnie > 0 ? 1 : 0) + 
+                       (aiLevels.foxy > 0 ? 1 : 0) + 
+                       (aiLevels.freddy > 0 ? 1 : 0) + 
+                       (aiLevels.puppet > 0 ? 1 : 0);
+    
+    // Bonus per avere più animatronics attivi contemporaneamente
+    const diversityBonus = activeCount >= 4 ? 500 : activeCount >= 3 ? 300 : activeCount >= 2 ? 100 : 0;
+    
+    // Calcolo base (livelli × 50 punti)
+    let baseScore = totalAILevel * basePointsPerLevel;
+    
+    // Bonus energia - premia efficienza (max 500 punti con 100% energia)
+    const powerBonus = Math.floor(state.pwr * 5);
+    
+    // Bonus notte preset (incentivo a giocare notti progressive)
+    let nightBonus = 0;
+    if (selectedNight >= 1 && selectedNight <= 6) {
+        nightBonus = selectedNight * 200;
+    }
+    
+    // Totale
+    const totalScore = baseScore + powerBonus + diversityBonus + nightBonus;
+    
+    return totalScore;
+}
+
+window.nextNight = function() {
+    if (selectedNight < 7) {
+        selectNight(selectedNight + 1);
+        startBoot();
+    } else {
+        location.reload();
+    }
+};
+
+// ==================== DEBUG FUNCTIONS ====================
+window.toggleDebugMenu = function() {
+    if (!debugState.debugMenuEnabled) return;
+    const menu = document.getElementById('debug-menu');
+    menu.classList.toggle('active');
+    playSound(600, 'sine', 0.05);
+};
+
+window.setTimeSpeed = function(speed) {
+    debugState.timeSpeed = speed;
+    document.getElementById('time-speed-display').innerText = speed + 'x';
+    playSound(800, 'sine', 0.05);
+};
+
+window.modifyPower = function(amount) {
+    if (!state.active) return;
+    state.pwr = Math.max(0, Math.min(100, state.pwr + amount));
+    document.getElementById('power-input').value = Math.floor(state.pwr);
+    document.getElementById('debug-power-display').innerText = Math.floor(state.pwr) + '%';
+    updateUI();
+    playSound(700, 'sine', 0.05);
+};
+
+window.setPowerExact = function() {
+    if (!state.active) return;
+    const value = parseInt(document.getElementById('power-input').value);
+    if (!isNaN(value)) {
+        state.pwr = Math.max(0, Math.min(100, value));
+        document.getElementById('debug-power-display').innerText = Math.floor(state.pwr) + '%';
+        updateUI();
+        playSound(700, 'sine', 0.05);
+    }
+};
+
+window.skipToHour = function(hour) {
+    if (!state.active) return;
+    state.hour = hour;
+    state.sec = 0;
+    document.getElementById('clock').innerText = hour;
+    playSound(1000, 'sine', 0.2);
+    if (hour === 6) {
+        victory();
+    }
+};
+
+window.toggleInfinitePower = function() {
+    debugState.infinitePower = !debugState.infinitePower;
+    const statusEl = document.getElementById('infinite-power-status');
+    statusEl.innerText = 'Energia Infinita: ' + (debugState.infinitePower ? 'ON' : 'OFF');
+    playSound(900, 'sine', 0.1);
+};
+
+window.setVolume = function(type, value) {
+    const normalizedValue = parseInt(value) / 100;
+    
+    if (type === 'sfx') {
+        debugState.volumeSFX = normalizedValue;
+        document.getElementById('vol-sfx-display').innerText = value + '%';
+    } else if (type === 'ambient') {
+        debugState.volumeAmbient = normalizedValue;
+        document.getElementById('vol-ambient-display').innerText = value + '%';
+        
+        // Aggiorna ventilazione in tempo reale se attiva
+        if (ventilationOscillator) {
+            stopVentilation();
+            startVentilation();
+        }
+    } else if (type === 'musicbox') {
+        debugState.volumeMusicBox = normalizedValue;
+        document.getElementById('vol-music-display').innerText = value + '%';
+    }
+};
+
+window.resetProgress = function(type) {
+    const confirmMsg = type === 'all' ? 
+        'Sei sicuro di voler cancellare TUTTI i progressi? (achievements, notti, punteggio)' :
+        `Sei sicuro di voler cancellare i progressi di: ${type}?`;
+    
+    if (!confirm(confirmMsg)) return;
+    
+    if (type === 'achievements' || type === 'all') {
+        localStorage.removeItem('fnaf_achievements');
+        for (let key in achievements) {
+            achievements[key].unlocked = false;
+        }
+        playSound(400, 'square', 0.2);
+    }
+    
+    if (type === 'nights' || type === 'all') {
+        localStorage.removeItem('fnaf_night');
+        const nightEl = document.getElementById('highscore-night');
+        const night7Btn = document.getElementById('night-7-btn');
+        if (nightEl) nightEl.innerText = 'Nessuna';
+        if (night7Btn) night7Btn.style.display = 'none';
+        playSound(400, 'square', 0.2);
+    }
+    
+    if (type === 'score' || type === 'all') {
+        localStorage.removeItem('fnaf_highscore');
+        const scoreEl = document.getElementById('highscore');
+        if (scoreEl) scoreEl.innerText = '0 punti';
+        playSound(400, 'square', 0.2);
+    }
+    
+    if (type === 'all') {
+        playSound(200, 'sawtooth', 0.5);
+        alert('Tutti i progressi sono stati cancellati! Ricarica la pagina per applicare le modifiche.');
+    } else {
+        alert('Reset completato! Ricarica la pagina per applicare le modifiche.');
+    }
+};
+
+window.unlockAllCollectibles = function() {
+    for (let key in collectibles) {
+        collectibles[key].found = true;
+    }
+    saveCollectibles();
+    playSound(1200, 'sine', 0.3);
+    alert('Tutti i collectibles sbloccati!');
+};
+
+window.unlockAllBestiary = function() {
+    for (let key in bestiary) {
+        bestiary[key].viewCount = 100;
+    }
+    saveBestiary();
+    playSound(1200, 'sine', 0.3);
+    alert('Bestiary completato!');
+};
+
+window.resetCollectibles = function() {
+    if (!confirm('Resettare tutti i collectibles?')) return;
+    for (let key in collectibles) {
+        collectibles[key].found = false;
+    }
+    saveCollectibles();
+    playSound(400, 'square', 0.2);
+    alert('Collectibles resettati!');
+};
+
+window.resetBestiary = function() {
+    if (!confirm('Resettare il bestiary?')) return;
+    for (let key in bestiary) {
+        bestiary[key].viewCount = 0;
+    }
+    saveBestiary();
+    playSound(400, 'square', 0.2);
+    alert('Bestiary resettato!');
+};
+
+// Listener tastiera per aprire debug con tasto D
+document.addEventListener('keydown', function(e) {
+    if ((e.key === 'd' || e.key === 'D') && debugState.debugMenuEnabled) {
+        toggleDebugMenu();
+    }
+});
+
+// Update debug display durante il gioco
+let lastFrameTime = Date.now();
+let fps = 60;
+setInterval(function() {
+    if (state.active) {
+        document.getElementById('debug-power-display').innerText = Math.floor(state.pwr) + '%';
+        document.getElementById('power-input').value = Math.floor(state.pwr);
+        
+        // Calcola FPS
+        const now = Date.now();
+        const delta = now - lastFrameTime;
+        fps = Math.round(1000 / delta);
+        lastFrameTime = now;
+        document.getElementById('debug-fps').innerText = fps;
+        
+        // Calcola tempo di gioco
+        const gameTime = Math.floor((now - gameStartTime) / 1000);
+        const minutes = Math.floor(gameTime / 60);
+        const seconds = gameTime % 60;
+        document.getElementById('debug-game-time').innerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+}, 100);
+
+// ==================== INIT ====================
+window.onload = function() {
+    // Carica notte più alta completata
+    const savedNight = localStorage.getItem('fnaf_night');
+    if (savedNight) {
+        document.getElementById('highscore-night').innerText = 'Notte ' + savedNight;
+        
+        // Sblocca notte 7 se hai completato la 6
+        if (parseInt(savedNight) >= 6) {
+            document.getElementById('night-7-btn').style.display = 'inline-block';
+        }
+    }
+    
+    // Carica punteggio massimo
+    const savedScore = localStorage.getItem('fnaf_highscore');
+    if (savedScore) {
+        document.getElementById('highscore').innerText = savedScore + ' punti';
+    } else {
+        document.getElementById('highscore').innerText = '0 punti';
+    }
+    
+    // Carica achievements
+    const savedAchievements = JSON.parse(localStorage.getItem('fnaf_achievements') || '{}');
+    for (let key in savedAchievements) {
+        if (achievements[key]) {
+            achievements[key].unlocked = savedAchievements[key];
+        }
+    }
+    
+    // Carica impostazioni
+    const savedSettings = JSON.parse(localStorage.getItem('fnaf_settings') || '{}');
+    if (savedSettings.volumeSFX !== undefined) debugState.volumeSFX = savedSettings.volumeSFX;
+    if (savedSettings.volumeAmbient !== undefined) debugState.volumeAmbient = savedSettings.volumeAmbient;
+    if (savedSettings.volumeMusicBox !== undefined) debugState.volumeMusicBox = savedSettings.volumeMusicBox;
+    if (savedSettings.debugMenuEnabled !== undefined) debugState.debugMenuEnabled = savedSettings.debugMenuEnabled;
+    
+    // Carica collectibles
+    const savedCollectibles = JSON.parse(localStorage.getItem('fnaf_collectibles') || '{}');
+    for (let key in savedCollectibles) {
+        if (collectibles[key]) {
+            collectibles[key].found = savedCollectibles[key];
+        }
+    }
+    
+    // Carica bestiary
+    const savedBestiary = JSON.parse(localStorage.getItem('fnaf_bestiary') || '{}');
+    for (let key in savedBestiary) {
+        if (bestiary[key]) {
+            bestiary[key].viewCount = savedBestiary[key];
+        }
+    }
+    
+    // Nascondi debug toggle se non abilitato
+    document.getElementById('debug-toggle').style.display = debugState.debugMenuEnabled ? 'flex' : 'none';
+    
+    // Imposta preset notte 1
+    selectNight(1);
+};
+</script>
+</body>
+</html>
